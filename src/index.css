@@ -1,0 +1,107 @@
+@import 'react-toastify/dist/ReactToastify.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Toast customization */
+.Toastify__toast-container {
+  z-index: 9999;
+  font-family: 'Inter', sans-serif;
+}
+
+.Toastify__toast {
+  border-radius: 12px;
+  font-size: 14px;
+  padding: 16px;
+  min-height: 60px;
+}
+
+.Toastify__toast--success {
+  background: linear-gradient(135deg, #38A169 0%, #48BB78 100%);
+  color: white;
+}
+
+.Toastify__toast--error {
+  background: linear-gradient(135deg, #E53E3E 0%, #F56565 100%);
+  color: white;
+}
+
+.Toastify__toast--info {
+  background: linear-gradient(135deg, #3182CE 0%, #4299E1 100%);
+  color: white;
+}
+
+.Toastify__toast--warning {
+  background: linear-gradient(135deg, #DD6B20 0%, #ED8936 100%);
+  color: white;
+}
+
+.Toastify__progress-bar {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* Smooth transitions for all elements */
+* {
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+/* Property card hover effects */
+.property-card:hover {
+  transform: scale(1.02) translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Custom button animations */
+.btn-scale:active {
+  transform: scale(0.98);
+}
+
+/* Gradient text effect */
+.gradient-text {
+  background: linear-gradient(135deg, #2C7A7B 0%, #ED8936 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom focus styles */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: #2C7A7B;
+  border-color: #2C7A7B;
+}
+
+/* Loading shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 0px, #e0e0e0 40px, #f0f0f0 80px);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+}
