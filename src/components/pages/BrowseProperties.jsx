@@ -557,12 +557,10 @@ return (
               )}
             </div>
           ))}
-        </div>
-      </div>
 </div>
+      </div>
     </div>
   )}
-
 {/* Map View */}
 {viewMode === 'map' && (
   <div className="h-96 sm:h-[600px] rounded-xl overflow-hidden border border-gray-200 shadow-lg">
@@ -720,8 +718,8 @@ return (
     )}
   </>
 )}
-    </div>
-  );
+</div>
+);
 };
 
 export default BrowseProperties;
