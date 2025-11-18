@@ -85,12 +85,26 @@ async getByPropertyId(propertyId) {
     });
   }
 
-async getByHostProperties(propertyIds) {
+  async getByHostProperties(propertyIds) {
     return new Promise((resolve) => {
       setTimeout(() => {
         const propertyIdStrings = propertyIds.map(id => id.toString());
         const hostBookings = this.bookings.filter(b => propertyIdStrings.includes(b.propertyId.toString()));
         resolve(hostBookings);
+      }, 200);
+    });
+  }
+
+  async getCompletedBookingsByGuest(guestId) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const now = new Date();
+        const completedBookings = this.bookings.filter(b => 
+          b.guestId === guestId && 
+          b.status === "confirmed" && 
+          new Date(b.checkOut) < now
+        );
+        resolve(completedBookings);
       }, 200);
     });
   }

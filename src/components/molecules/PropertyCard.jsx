@@ -4,6 +4,8 @@ import { cn } from "@/utils/cn";
 import ApperIcon from "@/components/ApperIcon";
 import Card from "@/components/atoms/Card";
 import Badge from "@/components/atoms/Badge";
+import StarRating from "@/components/molecules/StarRating";
+import { reviewService } from "@/services/api/reviewService";
 
 const PropertyCard = ({ property, className, onEdit, onDelete, showActions = false }) => {
   const navigate = useNavigate();
@@ -57,7 +59,23 @@ const PropertyCard = ({ property, className, onEdit, onDelete, showActions = fal
       </div>
 
       {/* Property Info */}
-      <div className="p-6">
+<div className="p-6">
+        {/* Rating Display */}
+        {(() => {
+          const ratingData = reviewService.getAverageRating(property.Id);
+          return ratingData.reviewCount > 0 ? (
+            <div className="flex items-center justify-between mb-3">
+              <StarRating rating={ratingData.overall} size={16} />
+              <span className="text-sm text-gray-500">
+                ({ratingData.reviewCount} review{ratingData.reviewCount !== 1 ? 's' : ''})
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center mb-3">
+              <span className="text-sm text-gray-500">No reviews yet</span>
+            </div>
+          );
+        })()}
         <div className="mb-3">
           <h3 className="text-xl font-semibold font-display text-gray-900 mb-2 line-clamp-2">
             {property.title}

@@ -1,4 +1,6 @@
 import propertiesData from "@/services/mockData/properties.json";
+import { reviewService } from "@/services/api/reviewService";
+import React from "react";
 // Mock availability storage - in production, this would be stored in database
 let propertyAvailability = {};
 
@@ -7,45 +9,64 @@ class PropertyService {
     this.properties = [...propertiesData];
   }
 
-  async getAll() {
+async getAll() {
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve([...this.properties]);
+        const propertiesWithRatings = this.properties.map(property => {
+          const ratingData = reviewService.getAverageRating(property.Id);
+          return {
+            ...property,
+            averageRating: ratingData.overall,
+            reviewCount: ratingData.reviewCount
+          };
+        });
+        resolve(propertiesWithRatings);
       }, 300);
     });
   }
 
-  async getById(id) {
+async getById(id) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const property = this.properties.find(p => p.Id === parseInt(id));
         if (property) {
-          resolve({ ...property });
+          const ratingData = reviewService.getAverageRating(property.Id);
+          resolve({ 
+            ...property,
+            averageRating: ratingData.overall,
+            reviewCount: ratingData.reviewCount
+          });
         } else {
           reject(new Error("Property not found"));
         }
       }, 200);
     });
+}
+      }, 200);
+    });
   }
 
-async create(property) {
+  async create(property) {
     return new Promise((resolve) => {
       setTimeout(() => {
         const maxId = Math.max(...this.properties.map(p => p.Id), 0);
         
-// Convert File objects to URLs for mock storage
+        // Convert File objects to URLs for mock storage
         const processedImages = property.images?.map(image => {
           if (typeof window !== 'undefined' && typeof File !== 'undefined' && image instanceof File) {
             // In a real app, this would upload to a server and return a URL
             return `https://example.com/uploads/${image.name}`;
           }
           return image;
-}) || [];
+        }) || [];
+        
         const newProperty = {
           ...property,
           Id: maxId + 1,
           images: processedImages,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          averageRating: 0,
+          reviewCount: 0
         };
         
         // Initialize availability for new property
@@ -54,24 +75,28 @@ async create(property) {
         resolve({ ...newProperty });
       }, 400);
     });
-  }
+}
 
   async update(id, propertyData) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const index = this.properties.findIndex(p => p.Id === parseInt(id));
         if (index !== -1) {
-// Convert File objects to URLs for mock storage
+          // Convert File objects to URLs for mock storage
           const processedImages = propertyData.images?.map(image => {
             if (typeof window !== 'undefined' && typeof File !== 'undefined' && image instanceof File) {
               return `https://example.com/uploads/${image.name}`;
             }
             return image;
           }) || [];
-const updatedProperty = { 
+          
+          const ratingData = reviewService.getAverageRating(this.properties[index].Id);
+          const updatedProperty = { 
             ...this.properties[index], 
             ...propertyData,
-            images: processedImages
+            images: processedImages,
+            averageRating: ratingData.overall,
+            reviewCount: ratingData.reviewCount
           };
           this.properties[index] = updatedProperty;
           resolve({ ...updatedProperty });
@@ -80,9 +105,9 @@ const updatedProperty = {
         }
       }, 350);
     });
-  }
+}
 
-async delete(id) {
+  async delete(id) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const index = this.properties.findIndex(p => p.Id === parseInt(id));
@@ -94,8 +119,6 @@ async delete(id) {
         }
       }, 250);
     });
-  }
-
   // Initialize availability for a property (default to available for next 365 days)
   initializeAvailability(propertyId) {
     if (!propertyAvailability[propertyId]) {
@@ -136,6 +159,7 @@ async delete(id) {
       }, 300);
     });
 }
+
   // Update availability for specific date
   async updateAvailability(propertyId, dateKey, status) {
     return new Promise((resolve, reject) => {
@@ -298,6 +322,24 @@ async delete(id) {
         resolve(filteredProperties);
       }, 300);
     });
+});
+  }
+
+  // Review-related methods
+  async getPropertyReviews(propertyId) {
+    return await reviewService.getByPropertyId(propertyId);
+  }
+
+  async addReview(propertyId, reviewData) {
+    const review = await reviewService.create({
+      ...reviewData,
+      propertyId: parseInt(propertyId)
+    });
+    return review;
+  }
+
+  getAverageRating(propertyId) {
+    return reviewService.getAverageRating(propertyId);
   }
 }
 

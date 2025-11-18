@@ -1,0 +1,138 @@
+[
+  {
+    "Id": 1,
+    "propertyId": 1,
+    "guestId": "guest001",
+    "guestName": "Sarah Johnson",
+    "overallRating": 5,
+    "categoryRatings": {
+      "cleanliness": 5,
+      "accuracy": 5,
+      "communication": 4,
+      "location": 5,
+      "value": 5
+    },
+    "reviewText": "Absolutely stunning oceanfront villa! The location was perfect with breathtaking views right from the living room. The host was incredibly responsive and the place was spotless upon arrival. Would definitely book again for our next family vacation.",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "helpfulCount": 8
+  },
+  {
+    "Id": 2,
+    "propertyId": 1,
+    "guestId": "guest002",
+    "guestName": "Michael Chen",
+    "overallRating": 4,
+    "categoryRatings": {
+      "cleanliness": 4,
+      "accuracy": 5,
+      "communication": 3,
+      "location": 5,
+      "value": 4
+    },
+    "reviewText": "Great location and the villa matched the photos perfectly. The ocean view is incredible and the amenities were excellent. Communication could have been better during check-in, but overall a wonderful stay.",
+    "createdAt": "2024-01-08T14:22:00.000Z",
+    "helpfulCount": 5
+  },
+  {
+    "Id": 3,
+    "propertyId": 2,
+    "guestId": "guest003",
+    "guestName": "Emily Rodriguez",
+    "overallRating": 5,
+    "categoryRatings": {
+      "cleanliness": 5,
+      "accuracy": 5,
+      "communication": 5,
+      "location": 4,
+      "value": 5
+    },
+    "reviewText": "The mountain cabin exceeded all expectations! Perfect for a romantic getaway with incredible attention to detail. The fireplace was cozy, the kitchen well-equipped, and the hot tub was the perfect end to our hiking days. Highly recommend!",
+    "createdAt": "2024-01-20T16:45:00.000Z",
+    "helpfulCount": 12
+  },
+  {
+    "Id": 4,
+    "propertyId": 2,
+    "guestId": "guest004",
+    "guestName": "David Wilson",
+    "overallRating": 4,
+    "categoryRatings": {
+      "cleanliness": 5,
+      "accuracy": 4,
+      "communication": 4,
+      "location": 4,
+      "value": 4
+    },
+    "reviewText": "Lovely cabin in a serene setting. The space was clean and comfortable, though the WiFi was a bit spotty (which might be a plus for some!). Great base for exploring the local trails and the hot tub was definitely a highlight.",
+    "createdAt": "2024-01-12T09:18:00.000Z",
+    "helpfulCount": 3
+  },
+  {
+    "Id": 5,
+    "propertyId": 3,
+    "guestId": "guest005",
+    "guestName": "Jennifer Kim",
+    "overallRating": 5,
+    "categoryRatings": {
+      "cleanliness": 5,
+      "accuracy": 5,
+      "communication": 5,
+      "location": 5,
+      "value": 4
+    },
+    "reviewText": "This city loft is a gem! Perfect location for exploring downtown, modern amenities, and the rooftop terrace is amazing for morning coffee. The host provided excellent local recommendations. Will definitely be back on our next city visit.",
+    "createdAt": "2024-01-25T11:33:00.000Z",
+    "helpfulCount": 7
+  },
+  {
+    "Id": 6,
+    "propertyId": 4,
+    "guestId": "guest006",
+    "guestName": "Robert Taylor",
+    "overallRating": 4,
+    "categoryRatings": {
+      "cleanliness": 4,
+      "accuracy": 4,
+      "communication": 5,
+      "location": 3,
+      "value": 5
+    },
+    "reviewText": "Fantastic lakefront cottage! The location is peaceful and the lake access is wonderful for swimming and kayaking. Great value for families. The only minor issue was the distance to town for groceries, but that's part of the charm of being on the lake.",
+    "createdAt": "2024-01-18T13:27:00.000Z",
+    "helpfulCount": 4
+  },
+  {
+    "Id": 7,
+    "propertyId": 5,
+    "guestId": "guest007",
+    "guestName": "Lisa Anderson",
+    "overallRating": 3,
+    "categoryRatings": {
+      "cleanliness": 3,
+      "accuracy": 4,
+      "communication": 2,
+      "location": 4,
+      "value": 3
+    },
+    "reviewText": "The apartment location is great and matches the photos, but there were some cleanliness issues upon arrival and communication with the host was difficult. The space itself is nice once we got settled in.",
+    "createdAt": "2024-01-10T08:15:00.000Z",
+    "helpfulCount": 1
+  },
+  {
+    "Id": 8,
+    "propertyId": 6,
+    "guestId": "guest008",
+    "guestName": "James Brown",
+    "overallRating": 5,
+    "categoryRatings": {
+      "cleanliness": 5,
+      "accuracy": 5,
+      "communication": 5,
+      "location": 5,
+      "value": 5
+    },
+    "reviewText": "Incredible beachfront condo! Waking up to ocean views every morning was magical. The condo is beautifully decorated, well-maintained, and the host was super responsive. Perfect for couples or small families. The beach access is unbeatable!",
+    "createdAt": "2024-01-22T15:41:00.000Z",
+    "helpfulCount": 9
+  }
+]
