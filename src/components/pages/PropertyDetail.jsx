@@ -199,12 +199,15 @@ if (!bookingData.checkIn || !bookingData.checkOut) {
     if (property?.images) {
       setCurrentImageIndex((prev) => 
         prev === 0 ? property.images.length - 1 : prev - 1
-      );
-    }
-  };
+);
+  }
 };
 
-  useEffect(() => {
+useEffect(() => {
+  loadProperty();
+}, [id]);
+
+useEffect(() => {
     loadReviews();
   }, [id]);
 
