@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import BookingCard from "@/components/molecules/BookingCard";
-import Loading from "@/components/ui/Loading";
-import ErrorView from "@/components/ui/ErrorView";
-import Empty from "@/components/ui/Empty";
-import ApperIcon from "@/components/ApperIcon";
-import Badge from "@/components/atoms/Badge";
 import { bookingService } from "@/services/api/bookingService";
 import { propertyService } from "@/services/api/propertyService";
+import ApperIcon from "@/components/ApperIcon";
+import BookingCard from "@/components/molecules/BookingCard";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import ErrorView from "@/components/ui/ErrorView";
+import Badge from "@/components/atoms/Badge";
 
 const MyBookings = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -207,10 +209,13 @@ const MyBookings = () => {
           <p className="text-gray-600 font-body mb-6">
             Need help with check-in, cancellations, or have questions about your reservations? Our team is here to assist you.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-medium rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all duration-200 font-body">
+<div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button 
+              onClick={() => navigate('/messages')}
+              className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-medium rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all duration-200 font-body"
+            >
               <ApperIcon name="MessageCircle" className="h-4 w-4 mr-2" />
-              Contact Host
+              Send Message
             </button>
             <button className="flex items-center justify-center px-6 py-3 border-2 border-primary-500 text-primary-600 font-medium rounded-lg hover:bg-primary-50 transition-all duration-200 font-body">
               <ApperIcon name="HelpCircle" className="h-4 w-4 mr-2" />

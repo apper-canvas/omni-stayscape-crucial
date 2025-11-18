@@ -1,11 +1,17 @@
 import React from "react";
-import { format, parseISO } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 import { cn } from "@/utils/cn";
 import ApperIcon from "@/components/ApperIcon";
+import Button from "@/components/atoms/Button";
 import Card from "@/components/atoms/Card";
 import Badge from "@/components/atoms/Badge";
-
 const BookingCard = ({ booking, property, className, onCancel, isHost, onApprove, onDecline }) => {
+  const navigate = useNavigate();
+
+  const handleSendMessage = () => {
+    navigate(`/messages?booking=${booking.Id}`);
+  };
   const getStatusVariant = (status) => {
     switch (status.toLowerCase()) {
       case "confirmed":
@@ -23,7 +29,7 @@ const BookingCard = ({ booking, property, className, onCancel, isHost, onApprove
 
   const formatDate = (dateString) => {
     try {
-      return format(parseISO(dateString), "MMM dd, yyyy");
+return format(new Date(dateString), "MMM dd, yyyy");
     } catch (error) {
       return dateString;
     }
@@ -149,7 +155,24 @@ const BookingCard = ({ booking, property, className, onCancel, isHost, onApprove
                 {booking.specialRequests}
               </div>
             </div>
+</div>
           )}
+
+          {/* Action Buttons */}
+          <div className="pt-4 border-t border-gray-100">
+            <div className="flex flex-wrap gap-3">
+              {/* Send Message Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSendMessage}
+                className="flex-1 sm:flex-none"
+              >
+                <ApperIcon name="MessageCircle" className="h-4 w-4 mr-2" />
+                Send Message
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </Card>

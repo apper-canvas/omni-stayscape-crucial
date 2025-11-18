@@ -38,7 +38,7 @@ const Sidebar = ({ isOpen, className }) => {
           <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider font-body">
             Management
           </div>
-          <nav className="mt-3 space-y-1">
+<nav className="mt-3 space-y-1">
             <NavItem
               to="analytics"
               icon="BarChart3"
@@ -46,7 +46,7 @@ const Sidebar = ({ isOpen, className }) => {
               className="text-sm"
             />
             <NavItem
-              to="calendar"
+              to="availability"
               icon="Calendar"
               label="Availability"
               className="text-sm"

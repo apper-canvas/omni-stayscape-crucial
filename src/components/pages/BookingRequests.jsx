@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import BookingCard from "@/components/molecules/BookingCard";
-import Loading from "@/components/ui/Loading";
-import ErrorView from "@/components/ui/ErrorView";
-import Empty from "@/components/ui/Empty";
-import ApperIcon from "@/components/ApperIcon";
-import Badge from "@/components/atoms/Badge";
 import { bookingService } from "@/services/api/bookingService";
 import { propertyService } from "@/services/api/propertyService";
+import ApperIcon from "@/components/ApperIcon";
+import BookingCard from "@/components/molecules/BookingCard";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import ErrorView from "@/components/ui/ErrorView";
+import Badge from "@/components/atoms/Badge";
 
 const BookingRequests = () => {
-  const [bookings, setBookings] = useState([]);
+  const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("pending");
@@ -78,20 +80,20 @@ const BookingRequests = () => {
     return properties.find(p => p.Id === parseInt(propertyId));
   };
 
-  const filteredBookings = bookings.filter(booking => {
+const filteredBookings = (bookings || []).filter(booking => {
     if (filter === "all") return true;
-    return booking.status.toLowerCase() === filter.toLowerCase();
+    return booking.status?.toLowerCase() === filter.toLowerCase();
   });
 
   const getStatusCounts = () => {
-    const counts = bookings.reduce((acc, booking) => {
-      const status = booking.status.toLowerCase();
+    const counts = (bookings || []).reduce((acc, booking) => {
+      const status = booking.status?.toLowerCase() || 'pending';
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {});
     
-    return {
-      all: bookings.length,
+return {
+      all: (bookings || []).length,
       pending: counts.pending || 0,
       confirmed: counts.confirmed || 0,
       cancelled: counts.cancelled || 0
@@ -130,7 +132,7 @@ const BookingRequests = () => {
     );
   }
 
-  if (bookings.length === 0) {
+if (!bookings || bookings.length === 0) {
     return (
       <Empty
         title="No booking requests yet"
@@ -262,13 +264,13 @@ const BookingRequests = () => {
             Approve or decline booking requests to maintain control over your property calendar. 
             Guests are automatically notified of status changes via email.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+<div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
-              onClick={() => toast.info('Host support coming soon! Get help with managing your bookings.')}
+              onClick={() => navigate('/messages')}
               className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-medium rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all duration-200 font-body"
             >
               <ApperIcon name="MessageCircle" className="h-4 w-4 mr-2" />
-              Host Support
+              Send Message to Guest
             </button>
             <button 
               onClick={() => toast.info('Booking policies and guidelines coming soon!')}

@@ -80,14 +80,15 @@ if (!bookingData.checkIn || !bookingData.checkOut) {
 const totalPrice = nights * property.pricePerNight;
 
     setBookingLoading(true);
-    try {
+try {
       const booking = await bookingService.create({
         propertyId: property.Id.toString(),
         guestName: bookingData.guestName,
         checkIn: bookingData.checkIn,
         checkOut: bookingData.checkOut,
         guests: parseInt(bookingData.guests),
-        totalPrice: totalPrice
+        totalPrice: totalPrice,
+        specialRequests: bookingData.specialRequests || ""
       });
 
       if (booking) {

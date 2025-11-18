@@ -1,5 +1,5 @@
 import bookingsData from "@/services/mockData/bookings.json";
-import React from "react";
+import { toast } from "react-toastify";
 
 class BookingService {
   constructor() {
