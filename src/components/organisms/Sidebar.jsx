@@ -1,9 +1,11 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/utils/cn";
-import NavItem from "@/components/molecules/NavItem";
 import ApperIcon from "@/components/ApperIcon";
+import NavItem from "@/components/molecules/NavItem";
 
 const Sidebar = ({ className }) => {
+  const navigate = useNavigate();
   const navigation = [
     { name: "Browse Properties", href: "", icon: "Search" },
     { name: "My Listings", href: "my-listings", icon: "Building" },
@@ -46,7 +48,10 @@ const Sidebar = ({ className }) => {
             Quick Actions
           </h3>
           <div className="space-y-2">
-            <button className="w-full flex items-center px-4 py-3 text-sm font-medium text-accent-600 hover:text-accent-700 hover:bg-accent-50 rounded-lg transition-colors font-body">
+<button 
+              onClick={() => navigate('/my-listings')}
+              className="w-full flex items-center px-4 py-3 text-sm font-medium text-accent-600 hover:text-accent-700 hover:bg-accent-50 rounded-lg transition-colors font-body cursor-pointer"
+            >
               <ApperIcon name="Plus" className="h-5 w-5 mr-3" />
               Add Property
             </button>
