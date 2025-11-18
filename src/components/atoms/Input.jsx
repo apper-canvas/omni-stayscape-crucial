@@ -7,6 +7,7 @@ const Input = forwardRef(({
   label,
   error,
   required = false,
+  accept,
   ...props
 }, ref) => {
   return (
@@ -17,8 +18,9 @@ const Input = forwardRef(({
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
-      <input
+<input
         type={type}
+        accept={accept}
         className={cn(
           "w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm",
           "focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
@@ -26,6 +28,7 @@ const Input = forwardRef(({
           "transition-all duration-200",
           "disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed",
           error && "border-red-500 focus:ring-red-500 focus:border-red-500",
+          type === "file" && "file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100",
           className
         )}
         ref={ref}

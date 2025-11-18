@@ -1,5 +1,4 @@
 import propertiesData from "@/services/mockData/properties.json";
-
 class PropertyService {
   constructor() {
     this.properties = [...propertiesData];
@@ -26,13 +25,23 @@ class PropertyService {
     });
   }
 
-  async create(property) {
+async create(property) {
     return new Promise((resolve) => {
       setTimeout(() => {
         const maxId = Math.max(...this.properties.map(p => p.Id), 0);
+        
+// Convert File objects to URLs for mock storage
+        const processedImages = property.images?.map(image => {
+          if (typeof File !== 'undefined' && image instanceof File) {
+            // In a real app, this would upload to a server and return a URL
+            return `https://example.com/uploads/${image.name}`;
+          }
+          return image;
+        }) || [];
         const newProperty = {
           ...property,
           Id: maxId + 1,
+          images: processedImages,
           createdAt: new Date().toISOString()
         };
         this.properties.push(newProperty);
@@ -46,8 +55,20 @@ class PropertyService {
       setTimeout(() => {
         const index = this.properties.findIndex(p => p.Id === parseInt(id));
         if (index !== -1) {
-          this.properties[index] = { ...this.properties[index], ...propertyData };
-          resolve({ ...this.properties[index] });
+// Convert File objects to URLs for mock storage
+          const processedImages = propertyData.images?.map(image => {
+            if (typeof File !== 'undefined' && image instanceof File) {
+              return `https://example.com/uploads/${image.name}`;
+            }
+            return image;
+          }) || [];
+          const updatedProperty = { 
+            ...this.properties[index], 
+            ...propertyData,
+            images: processedImages
+          };
+          this.properties[index] = updatedProperty;
+          resolve({ ...updatedProperty });
         } else {
           reject(new Error("Property not found"));
         }

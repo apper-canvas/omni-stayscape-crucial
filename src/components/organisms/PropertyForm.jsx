@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { propertyService } from "@/services/api/propertyService";
+import FileDropzone from "@/components/atoms/FileDropzone";
+import ImagePreviewGrid from "@/components/atoms/ImagePreviewGrid";
 import { cn } from "@/utils/cn";
 import ApperIcon from "@/components/ApperIcon";
 import Select from "@/components/atoms/Select";
@@ -10,7 +12,7 @@ import Input from "@/components/atoms/Input";
 
 const PropertyForm = ({ property, onSave, onCancel, className }) => {
 const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     title: "",
     location: "",
     description: "",
@@ -20,7 +22,7 @@ const [currentStep, setCurrentStep] = useState(1);
     bathrooms: "",
     propertyType: "",
     amenities: [],
-    images: [""]
+    images: []
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -44,7 +46,7 @@ const propertyTypes = [
     3: "Pricing & Images"
   };
 
-  useEffect(() => {
+useEffect(() => {
     if (property) {
       setFormData({
         title: property.title || "",
@@ -54,9 +56,9 @@ const propertyTypes = [
         maxGuests: property.maxGuests?.toString() || "",
         bedrooms: property.bedrooms?.toString() || "",
         bathrooms: property.bathrooms?.toString() || "",
-propertyType: property.propertyType || "",
+        propertyType: property.propertyType || "",
         amenities: property.amenities || [],
-        images: property.images?.length > 0 ? property.images : [""]
+        images: []
       });
       // If editing, skip to final step
       if (property) {
@@ -82,27 +84,49 @@ propertyType: property.propertyType || "",
     }));
   };
 
-  const handleImageChange = (index, value) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.map((img, i) => i === index ? value : img)
-    }));
-  };
+const handleFileDrop = useCallback((files) => {
+    const validFiles = Array.from(files).filter(file => {
+      const isValidType = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type);
+      const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
+      
+      if (!isValidType) {
+        toast.error(`${file.name} is not a valid image type. Please use JPG, PNG, or WebP.`);
+        return false;
+      }
+      
+      if (!isValidSize) {
+        toast.error(`${file.name} is too large. Please use images under 5MB.`);
+        return false;
+      }
+      
+      return true;
+    });
 
-  const addImageField = () => {
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ""]
-    }));
-  };
-
-  const removeImageField = (index) => {
-    if (formData.images.length > 1) {
+    if (validFiles.length > 0) {
       setFormData(prev => ({
         ...prev,
-        images: prev.images.filter((_, i) => i !== index)
+        images: [...prev.images, ...validFiles]
       }));
     }
+  }, []);
+
+  const removeImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const moveImage = (fromIndex, toIndex) => {
+    setFormData(prev => {
+      const newImages = [...prev.images];
+      const [movedImage] = newImages.splice(fromIndex, 1);
+      newImages.splice(toIndex, 0, movedImage);
+      return {
+        ...prev,
+        images: newImages
+      };
+    });
   };
 
 const validateForm = () => {
@@ -116,13 +140,13 @@ const validateForm = () => {
     if (!formData.bathrooms || parseInt(formData.bathrooms) < 0) newErrors.bathrooms = "Number of bathrooms is required and must be positive";
     if (!formData.maxGuests || parseInt(formData.maxGuests) < 1) newErrors.maxGuests = "Maximum guests must be at least 1";
     if (!formData.pricePerNight || parseInt(formData.pricePerNight) < 1) newErrors.pricePerNight = "Price per night must be at least $1";
-    if (formData.images.filter(img => img.trim()).length === 0) newErrors.images = "At least one image URL is required";
+    if (formData.images.length === 0) newErrors.images = "At least one image is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -137,8 +161,8 @@ const validateForm = () => {
         pricePerNight: parseInt(formData.pricePerNight),
         maxGuests: parseInt(formData.maxGuests),
         bedrooms: parseInt(formData.bedrooms),
-bathrooms: parseInt(formData.bathrooms),
-        images: formData.images.filter(img => img.trim()),
+        bathrooms: parseInt(formData.bathrooms),
+        images: formData.images,
         hostId: "host-1" // Default host ID
       };
 
@@ -382,44 +406,19 @@ const nextStep = () => {
               startIcon="$"
             />
 
-            {/* Images */}
+{/* Photo Upload */}
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-lg font-semibold font-display text-gray-900">
-                  Property Images
-                </h4>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addImageField}
-                >
-                  <ApperIcon name="Plus" className="h-4 w-4 mr-2" />
-                  Add Image
-                </Button>
-              </div>
-              <div className="space-y-3">
-                {formData.images.map((image, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <Input
-                      label={`Image URL ${index + 1}`}
-                      value={image}
-                      onChange={(e) => handleImageChange(index, e.target.value)}
-                      placeholder="https://example.com/image.jpg"
-                      className="flex-1"
-                    />
-                    {formData.images.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeImageField(index)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-7"
-                      >
-                        <ApperIcon name="Trash2" className="h-5 w-5" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <h4 className="text-lg font-semibold font-display text-gray-900 mb-4">
+                Property Photos
+              </h4>
+              <FileDropzone onFileDrop={handleFileDrop} />
+              {formData.images.length > 0 && (
+                <ImagePreviewGrid 
+                  images={formData.images}
+                  onRemove={removeImage}
+                  onMove={moveImage}
+                />
+              )}
               {errors.images && (
                 <p className="mt-2 text-sm text-red-600 font-body">{errors.images}</p>
               )}
