@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import StarRating from "@/components/molecules/StarRating";
-import ReviewCard from "@/components/molecules/ReviewCard";
-import ReviewForm from "@/components/organisms/ReviewForm";
-import { propertyService } from "@/services/api/propertyService";
 import { bookingService } from "@/services/api/bookingService";
 import { reviewService } from "@/services/api/reviewService";
+import { propertyService } from "@/services/api/propertyService";
 import ApperIcon from "@/components/ApperIcon";
+import StarRating from "@/components/molecules/StarRating";
+import ReviewCard from "@/components/molecules/ReviewCard";
 import AvailabilityCalendar from "@/components/molecules/AvailabilityCalendar";
 import Loading from "@/components/ui/Loading";
 import ErrorView from "@/components/ui/ErrorView";
+import ReviewForm from "@/components/organisms/ReviewForm";
 import Button from "@/components/atoms/Button";
 import Badge from "@/components/atoms/Badge";
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [property, setProperty] = useState(null);
-const [loading, setLoading] = useState(true);
+const [property, setProperty] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [bookingData, setBookingData] = useState({
@@ -35,8 +35,9 @@ const [loading, setLoading] = useState(true);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewSubmitLoading, setReviewSubmitLoading] = useState(false);
-  const [canWriteReview, setCanWriteReview] = useState(false);
-const loadProperty = async () => {
+const [canWriteReview, setCanWriteReview] = useState(false);
+  
+  const loadProperty = async () => {
     setLoading(true);
     setError("");
     
@@ -101,7 +102,6 @@ const loadProperty = async () => {
 
   const handleBooking = async (e) => {
     e.preventDefault();
-    
 if (!bookingData.checkIn || !bookingData.checkOut) {
       toast.error("Please select check-in and check-out dates");
       return;
@@ -136,11 +136,12 @@ if (!bookingData.checkIn || !bookingData.checkOut) {
     } catch (error) {
       toast.error("Unable to verify availability. Please try again.");
       return;
-    }
-const totalPrice = nights * property.pricePerNight;
+}
+    
+    const totalPrice = nights * property.pricePerNight;
 
     setBookingLoading(true);
-try {
+    try {
       const booking = await bookingService.create({
         propertyId: property.Id.toString(),
         guestName: bookingData.guestName,
@@ -201,9 +202,9 @@ try {
       );
     }
   };
+};
 
-useEffect(() => {
-    loadProperty();
+  useEffect(() => {
     loadReviews();
   }, [id]);
 
@@ -244,8 +245,8 @@ useEffect(() => {
       {/* Property Header */}
       <div className="space-y-4">
         <div className="flex items-start justify-between">
-          <div>
-<h1 className="text-3xl lg:text-4xl font-bold font-display text-gray-900">
+<div>
+            <h1 className="text-3xl lg:text-4xl font-bold font-display text-gray-900">
               {property.title}
             </h1>
             
@@ -371,8 +372,9 @@ useEffect(() => {
               ))}
             </div>
           </div>
-        </div>
-{/* Booking Card */}
+</div>
+          
+          {/* Booking Card */}
         <div className="lg:col-span-1">
           <div className="sticky top-6">
             <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
@@ -509,116 +511,9 @@ useEffect(() => {
         <h2 className="text-2xl font-bold font-display text-gray-900 mb-6">
           Availability Calendar
         </h2>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+<div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <AvailabilityCalendar
-
-        {/* Reviews Section */}
-        <div className="lg:col-span-2 space-y-8">
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Reviews {reviews.length > 0 && `(${reviews.length})`}
-              </h2>
-              {canWriteReview && !showReviewForm && (
-                <Button 
-                  onClick={() => setShowReviewForm(true)}
-                  className="bg-primary-500 hover:bg-primary-600"
-                >
-                  Write a Review
-                </Button>
-              )}
-            </div>
-
-            {/* Rating Breakdown */}
-            {(() => {
-              const ratingData = reviewService.getAverageRating(property.Id);
-              return ratingData.reviewCount > 0 && (
-                <div className="bg-gray-50 rounded-lg p-6 mb-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Overall Rating</h3>
-                      <div className="flex items-center space-x-4">
-                        <div className="text-4xl font-bold text-gray-900">
-                          {ratingData.overall}
-                        </div>
-                        <div>
-                          <StarRating rating={ratingData.overall} size={24} />
-                          <p className="text-sm text-gray-600 mt-1">
-                            Based on {ratingData.reviewCount} review{ratingData.reviewCount !== 1 ? 's' : ''}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Rating Breakdown</h3>
-                      <div className="space-y-2">
-                        {Object.entries(ratingData.categories).map(([category, rating]) => (
-                          <div key={category} className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600 capitalize w-24">
-                              {category}
-                            </span>
-                            <div className="flex items-center space-x-2 flex-1">
-                              <StarRating rating={rating} size={14} />
-                              <span className="text-sm font-medium w-8">
-                                {rating.toFixed(1)}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Review Form */}
-            {showReviewForm && (
-              <div className="mb-8">
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold">Write Your Review</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowReviewForm(false)}
-                    >
-                      <ApperIcon name="X" size={18} />
-                    </Button>
-                  </div>
-                  <ReviewForm
-                    onSubmit={handleReviewSubmit}
-                    loading={reviewSubmitLoading}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Reviews List */}
-            {reviewsLoading ? (
-              <div className="flex justify-center py-8">
-                <Loading />
-              </div>
-            ) : reviews.length > 0 ? (
-              <div className="space-y-6">
-                {reviews.map((review) => (
-                  <ReviewCard
-                    key={review.Id}
-                    review={review}
-                    onMarkHelpful={handleMarkHelpful}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <ApperIcon name="MessageSquare" size={48} className="mx-auto text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Reviews Yet</h3>
-                <p className="text-gray-600">Be the first to share your experience with this property!</p>
-              </div>
-            )}
-          </div>
-        </div>
-propertyId={property.Id}
+            propertyId={property.Id}
             mode="view"
             onDateSelect={(date) => {
               const dateStr = date.toISOString().split('T')[0];
@@ -638,9 +533,115 @@ propertyId={property.Id}
           />
         </div>
       </div>
+
+      {/* Reviews Section */}
+      <div className="space-y-8">
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold font-display text-gray-900">
+              Reviews {reviews.length > 0 && `(${reviews.length})`}
+            </h2>
+            {canWriteReview && !showReviewForm && (
+              <Button 
+                onClick={() => setShowReviewForm(true)}
+                variant="primary"
+              >
+                Write a Review
+              </Button>
+            )}
+          </div>
+
+          {/* Rating Breakdown */}
+          {(() => {
+            const ratingData = reviewService.getAverageRating(property.Id);
+            return ratingData.reviewCount > 0 && (
+              <div className="bg-gray-50 rounded-lg p-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Overall Rating</h3>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-4xl font-bold text-gray-900">
+                        {ratingData.overall}
+                      </div>
+                      <div>
+                        <StarRating rating={ratingData.overall} size={24} />
+                        <p className="text-sm text-gray-600 mt-1">
+                          Based on {ratingData.reviewCount} review{ratingData.reviewCount !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Rating Breakdown</h3>
+                    <div className="space-y-2">
+                      {Object.entries(ratingData.categories).map(([category, rating]) => (
+                        <div key={category} className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600 capitalize w-24">
+                            {category}
+                          </span>
+                          <div className="flex items-center space-x-2 flex-1">
+                            <StarRating rating={rating} size={14} />
+                            <span className="text-sm font-medium w-8">
+                              {rating.toFixed(1)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Review Form */}
+          {showReviewForm && (
+            <div className="mb-8">
+              <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold">Write Your Review</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowReviewForm(false)}
+                  >
+                    <ApperIcon name="X" size={18} />
+                  </Button>
+                </div>
+                <ReviewForm
+                  onSubmit={handleReviewSubmit}
+                  loading={reviewSubmitLoading}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Reviews List */}
+          {reviewsLoading ? (
+            <div className="flex justify-center py-8">
+              <Loading />
+            </div>
+          ) : reviews.length > 0 ? (
+            <div className="space-y-6">
+              {reviews.map((review) => (
+                <ReviewCard
+                  key={review.Id}
+                  review={review}
+                  onMarkHelpful={handleMarkHelpful}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <ApperIcon name="MessageSquare" size={48} className="mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Reviews Yet</h3>
+              <p className="text-gray-600">Be the first to share your experience with this property!</p>
+            </div>
+          )}
+        </div>
+</div>
     </div>
   );
 };
 
 export default PropertyDetail;
-};

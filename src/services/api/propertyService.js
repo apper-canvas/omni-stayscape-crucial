@@ -42,9 +42,6 @@ async getById(id) {
       }, 200);
     });
 }
-      }, 200);
-    });
-  }
 
   async create(property) {
     return new Promise((resolve) => {
@@ -117,8 +114,10 @@ async getById(id) {
         } else {
           reject(new Error("Property not found"));
         }
-      }, 250);
+}, 250);
     });
+  }
+
   // Initialize availability for a property (default to available for next 365 days)
   initializeAvailability(propertyId) {
     if (!propertyAvailability[propertyId]) {
@@ -173,13 +172,13 @@ async getById(id) {
           const validStatuses = ['available', 'blocked', 'booked'];
           if (!validStatuses.includes(status)) {
             throw new Error('Invalid availability status');
-          }
+}
 
           propertyAvailability[propertyId][dateKey] = status;
           resolve({ success: true });
         } catch (error) {
           reject(error);
-}
+        }
       }, 200);
     });
   }
@@ -193,8 +192,8 @@ async getById(id) {
         }
 
         const status = propertyAvailability[propertyId][dateKey];
-        resolve(status === 'available');
-}, 100);
+resolve(status === 'available');
+      }, 100);
     });
   }
 
@@ -221,9 +220,8 @@ async getById(id) {
           
           currentDate.setDate(currentDate.getDate() + 1);
         }
-
-        resolve(true);
-}, 200);
+resolve(true);
+      }, 200);
     });
   }
 
@@ -248,9 +246,9 @@ async getById(id) {
 
           resolve({ success: true });
         } catch (error) {
-          reject(error);
+reject(error);
         }
-}, 200);
+      }, 200);
     });
   }
 
@@ -320,9 +318,8 @@ async getById(id) {
         }
         
         resolve(filteredProperties);
-      }, 300);
+}, 300);
     });
-});
   }
 
   // Review-related methods
