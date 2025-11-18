@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { bookingService } from "@/services/api/bookingService";
 import { propertyService } from "@/services/api/propertyService";
+import BookingModificationModal from "@/components/molecules/BookingModificationModal";
 import ApperIcon from "@/components/ApperIcon";
 import BookingCard from "@/components/molecules/BookingCard";
 import Loading from "@/components/ui/Loading";
@@ -38,24 +39,66 @@ const MyBookings = () => {
     }
   };
 
-  const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm("Are you sure you want to cancel this booking?")) {
-      return;
-    }
+const [modificationModal, setModificationModal] = useState({ isOpen: false, booking: null });
 
+  const handleCancelBooking = async (bookingId) => {
     try {
-      await bookingService.update(bookingId, { status: "Cancelled" });
+      const cancellationInfo = await bookingService.canCancelBooking(bookingId);
+      
+      let confirmMessage = "Are you sure you want to cancel this booking?\n\n";
+      confirmMessage += `Policy: ${cancellationInfo.reason}\n`;
+      if (cancellationInfo.refundPercent > 0) {
+        confirmMessage += `Refund: ${cancellationInfo.refundPercent}% of total payment\n`;
+      }
+      confirmMessage += `Hours until check-in: ${Math.round(cancellationInfo.hoursUntilCheckIn)}`;
+
+      if (!window.confirm(confirmMessage)) {
+        return;
+      }
+
+      const reason = cancellationInfo.refundPercent === 0 
+        ? 'Late cancellation (no refund)' 
+        : cancellationInfo.refundPercent === 50 
+          ? 'Cancellation with partial refund' 
+          : 'Cancellation with full refund';
+
+      await bookingService.cancelBooking(bookingId, reason);
+      
+      // Release dates from property availability
+      const booking = bookings.find(b => b.Id === bookingId);
+      if (booking) {
+        await propertyService.releaseDatesFromBooking(booking.propertyId, booking.checkIn, booking.checkOut);
+      }
+      
       setBookings(prev => prev.map(booking => 
         booking.Id === bookingId 
-          ? { ...booking, status: "Cancelled" }
+          ? { ...booking, status: "Cancelled", cancellationReason: reason }
           : booking
       ));
-      toast.success("Booking cancelled successfully!");
+      
+      toast.success(`Booking cancelled successfully! ${cancellationInfo.refundPercent > 0 ? `${cancellationInfo.refundPercent}% refund will be processed.` : 'No refund applicable.'}`);
     } catch (err) {
       toast.error(err.message || "Failed to cancel booking");
     }
   };
 
+  const handleModifyBooking = (booking) => {
+    setModificationModal({ isOpen: true, booking });
+  };
+
+  const handleSubmitModification = async (modificationData) => {
+    try {
+      await bookingService.requestModification(modificationModal.booking.Id, modificationData);
+      setBookings(prev => prev.map(booking => 
+        booking.Id === modificationModal.booking.Id 
+          ? { ...booking, status: "Modification Requested" }
+          : booking
+      ));
+      setModificationModal({ isOpen: false, booking: null });
+    } catch (error) {
+      throw error;
+    }
+  };
   const getPropertyById = (propertyId) => {
     return properties.find(p => p.Id === parseInt(propertyId));
   };
@@ -194,6 +237,7 @@ const MyBookings = () => {
               booking={booking}
               property={getPropertyById(booking.propertyId)}
               onCancel={handleCancelBooking}
+              onModify={handleModifyBooking}
               showGuestReview={false} // Guests can't review other guests
             />
           ))}
@@ -223,8 +267,49 @@ const MyBookings = () => {
               Booking Help
             </button>
           </div>
+          
+          {/* Booking Policies */}
+          <div className="mt-8 bg-gray-50 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 font-display">
+              Booking Policies & Guidelines
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                  <ApperIcon name="Edit3" className="h-4 w-4 mr-2 text-blue-500" />
+                  Modification Policy
+                </h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Request changes 72+ hours before check-in</li>
+                  <li>• Host approval required for all modifications</li>
+                  <li>• Price differences will be adjusted</li>
+                  <li>• Free modifications for confirmed bookings</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                  <ApperIcon name="XCircle" className="h-4 w-4 mr-2 text-red-500" />
+                  Cancellation Policy
+                </h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• 48+ hours: Full refund (100%)</li>
+                  <li>• 24-48 hours: Partial refund (50%)</li>
+                  <li>• Less than 24 hours: No refund</li>
+                  <li>• Emergency exceptions may apply</li>
+                </ul>
+              </div>
+            </div>
+</div>
         </div>
       </div>
+
+      <BookingModificationModal
+        isOpen={modificationModal.isOpen}
+        onClose={() => setModificationModal({ isOpen: false, booking: null })}
+        booking={modificationModal.booking}
+        property={modificationModal.booking ? getPropertyById(modificationModal.booking.propertyId) : null}
+        onSubmit={handleSubmitModification}
+      />
     </div>
   );
 };

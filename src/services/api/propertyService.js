@@ -229,7 +229,7 @@ resolve(true);
   }
 
   // Mark dates as booked (called when booking is confirmed)
-  async markDatesAsBooked(propertyId, startDate, endDate) {
+async markDatesAsBooked(propertyId, startDate, endDate) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         try {
@@ -249,12 +249,37 @@ resolve(true);
 
           resolve({ success: true });
         } catch (error) {
-reject(error);
+          reject(error);
         }
       }, 200);
     });
   }
 
+  async releaseDatesFromBooking(propertyId, startDate, endDate) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          if (!propertyAvailability[propertyId]) {
+            this.initializeAvailability(propertyId);
+          }
+
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          const currentDate = new Date(start);
+
+          while (currentDate <= end) {
+            const dateKey = currentDate.toISOString().split('T')[0];
+            delete propertyAvailability[propertyId][dateKey];
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+
+          resolve({ success: true });
+        } catch (error) {
+          reject(error);
+        }
+      }, 200);
+    });
+  }
   async search(query) {
     return new Promise((resolve) => {
       setTimeout(() => {

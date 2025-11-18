@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { bookingService } from "@/services/api/bookingService";
 import { propertyService } from "@/services/api/propertyService";
+import BookingModificationModal from "@/components/molecules/BookingModificationModal";
 import ApperIcon from "@/components/ApperIcon";
 import BookingCard from "@/components/molecules/BookingCard";
 import Loading from "@/components/ui/Loading";
@@ -16,8 +17,8 @@ const BookingRequests = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState("pending");
-
+const [filter, setFilter] = useState("pending");
+  const [modificationModal, setModificationModal] = useState({ isOpen: false, booking: null });
   const loadData = async () => {
     setLoading(true);
     setError("");
@@ -40,7 +41,7 @@ const BookingRequests = () => {
     }
   };
 
-  const handleApproveBooking = async (bookingId) => {
+const handleApproveBooking = async (bookingId) => {
     if (!window.confirm("Are you sure you want to approve this booking request?")) {
       return;
     }
@@ -76,6 +77,48 @@ const BookingRequests = () => {
     }
   };
 
+  const handleApproveModification = async (bookingId, modificationId) => {
+    if (!window.confirm("Are you sure you want to approve this modification request?")) {
+      return;
+    }
+
+    try {
+      const booking = bookings.find(b => b.Id === bookingId);
+      if (booking && booking.modificationRequest) {
+        // Release old dates and mark new dates as booked
+        await propertyService.releaseDatesFromBooking(booking.propertyId, booking.checkIn, booking.checkOut);
+        await propertyService.markDatesAsBooked(
+          booking.propertyId, 
+          booking.modificationRequest.requestedCheckIn, 
+          booking.modificationRequest.requestedCheckOut
+        );
+      }
+
+      const updatedBooking = await bookingService.approveModificationRequest(bookingId, modificationId);
+      setBookings(prev => prev.map(booking => 
+        booking.Id === bookingId ? updatedBooking : booking
+      ));
+      toast.success("Modification request approved! The guest has been notified of the changes.");
+    } catch (err) {
+      toast.error(err.message || "Failed to approve modification request");
+    }
+  };
+
+  const handleDenyModification = async (bookingId, modificationId) => {
+    const reason = window.prompt("Please provide a reason for denying this modification request:");
+    if (!reason) return;
+
+    try {
+      const updatedBooking = await bookingService.denyModificationRequest(bookingId, modificationId, reason);
+      setBookings(prev => prev.map(booking => 
+        booking.Id === bookingId ? updatedBooking : booking
+      ));
+      toast.success("Modification request denied. The guest has been notified.");
+    } catch (err) {
+      toast.error(err.message || "Failed to deny modification request");
+    }
+  };
+
   const getPropertyById = (propertyId) => {
     return properties.find(p => p.Id === parseInt(propertyId));
   };
@@ -84,17 +127,22 @@ const filteredBookings = (bookings || []).filter(booking => {
     if (filter === "all") return true;
     return booking.status?.toLowerCase() === filter.toLowerCase();
   });
-
-  const getStatusCounts = () => {
+const getStatusCounts = () => {
     const counts = (bookings || []).reduce((acc, booking) => {
       const status = booking.status?.toLowerCase() || 'pending';
-      acc[status] = (acc[status] || 0) + 1;
+      if (status === 'modification requested') {
+        acc['modifications'] = (acc['modifications'] || 0) + 1;
+        acc['pending'] = (acc['pending'] || 0) + 1; // Also count as pending
+      } else {
+        acc[status] = (acc[status] || 0) + 1;
+      }
       return acc;
     }, {});
     
 return {
       all: (bookings || []).length,
       pending: counts.pending || 0,
+      modifications: counts.modifications || 0,
       confirmed: counts.confirmed || 0,
       cancelled: counts.cancelled || 0
     };
@@ -148,11 +196,16 @@ if (!bookings || bookings.length === 0) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-display gradient-text flex items-center">
+<h1 className="text-3xl font-bold font-display gradient-text flex items-center">
             Booking Requests
             {pendingCount > 0 && (
               <Badge variant="warning" size="sm" className="ml-3">
                 {pendingCount} pending
+              </Badge>
+            )}
+            {statusCounts.modifications > 0 && (
+              <Badge variant="info" size="sm" className="ml-2">
+                {statusCounts.modifications} modifications
               </Badge>
             )}
           </h1>
@@ -163,7 +216,7 @@ if (!bookings || bookings.length === 0) {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+<div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
         <div className="bg-gradient-to-br from-primary-50 to-primary-100 p-4 rounded-xl border border-primary-200 text-center">
           <div className="text-2xl font-bold text-primary-800 font-display">{statusCounts.all}</div>
           <div className="text-sm text-primary-600 font-body">Total Requests</div>
@@ -171,6 +224,10 @@ if (!bookings || bookings.length === 0) {
         <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-xl border border-yellow-200 text-center">
           <div className="text-2xl font-bold text-yellow-800 font-display">{statusCounts.pending}</div>
           <div className="text-sm text-yellow-600 font-body">Pending</div>
+        </div>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 text-center">
+          <div className="text-2xl font-bold text-blue-800 font-display">{statusCounts.modifications}</div>
+          <div className="text-sm text-blue-600 font-body">Modifications</div>
         </div>
         <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200 text-center">
           <div className="text-2xl font-bold text-green-800 font-display">{statusCounts.confirmed}</div>
@@ -184,8 +241,9 @@ if (!bookings || bookings.length === 0) {
 
       {/* Filter Tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
-        {[
+{[
           { key: "pending", label: "Pending Requests", count: statusCounts.pending, urgent: true },
+          { key: "modifications", label: "Modifications", count: statusCounts.modifications, urgent: true },
           { key: "all", label: "All Requests", count: statusCounts.all },
           { key: "confirmed", label: "Confirmed", count: statusCounts.confirmed },
           { key: "cancelled", label: "Declined", count: statusCounts.cancelled }
@@ -248,6 +306,8 @@ if (!bookings || bookings.length === 0) {
               isHost={true}
               onApprove={handleApproveBooking}
               onDecline={handleDeclineBooking}
+              onApproveModification={handleApproveModification}
+              onDenyModification={handleDenyModification}
               showGuestReview={true} // Hosts can review guests after completion
             />
           ))}
@@ -274,17 +334,113 @@ if (!bookings || bookings.length === 0) {
               Send Message to Guest
             </button>
             <button 
-              onClick={() => toast.info('Booking policies and guidelines coming soon!')}
+              onClick={() => toast.info('Host policies and guidelines available in your dashboard!')}
               className="flex items-center justify-center px-6 py-3 border-2 border-primary-500 text-primary-600 font-medium rounded-lg hover:bg-primary-50 transition-all duration-200 font-body"
             >
               <ApperIcon name="BookOpen" className="h-4 w-4 mr-2" />
               Booking Policies
             </button>
           </div>
+          
+          {/* Host Guidelines */}
+          <div className="mt-8 bg-gray-50 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 font-display">
+              Host Management Guidelines
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                  <ApperIcon name="CheckCircle" className="h-4 w-4 mr-2 text-green-500" />
+                  Booking Approvals
+                </h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Review guest profiles and reviews</li>
+                  <li>• Respond within 24 hours when possible</li>
+                  <li>• Check calendar availability before approving</li>
+                  <li>• Communicate house rules clearly</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                  <ApperIcon name="Edit3" className="h-4 w-4 mr-2 text-blue-500" />
+                  Modification Requests
+                </h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Review availability for requested dates</li>
+                  <li>• Consider guest circumstances</li>
+                  <li>• Price differences handled automatically</li>
+                  <li>• Communicate decisions promptly</li>
+                </ul>
+              </div>
+            </div>
+</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Help Section */}
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 text-center mt-12">
+        <div className="max-w-2xl mx-auto">
+          <ApperIcon name="Users" className="h-12 w-12 text-primary-600 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold font-display text-gray-900 mb-4">
+            Managing Your Bookings
+          </h3>
+          <p className="text-gray-600 font-body mb-6">
+            Approve or decline booking requests to maintain control over your property calendar. 
+            Guests are automatically notified of status changes via email.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button 
+              onClick={() => navigate('/messages')}
+              className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-medium rounded-lg hover:from-primary-600 hover:to-primary-700 transition-all duration-200 font-body"
+            >
+              <ApperIcon name="MessageCircle" className="h-4 w-4 mr-2" />
+              Send Message to Guest
+            </button>
+            <button 
+              onClick={() => toast.info('Host policies and guidelines available in your dashboard!')}
+              className="flex items-center justify-center px-6 py-3 border-2 border-primary-500 text-primary-600 font-medium rounded-lg hover:bg-primary-50 transition-all duration-200 font-body"
+            >
+              <ApperIcon name="BookOpen" className="h-4 w-4 mr-2" />
+              Booking Policies
+            </button>
+          </div>
+          
+          {/* Host Guidelines */}
+          <div className="mt-8 bg-gray-50 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 font-display">
+              Host Management Guidelines
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                  <ApperIcon name="CheckCircle" className="h-4 w-4 mr-2 text-green-500" />
+                  Booking Approvals
+                </h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Review guest profiles and reviews</li>
+                  <li>• Respond within 24 hours when possible</li>
+                  <li>• Check calendar availability before approving</li>
+                  <li>• Communicate house rules clearly</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                  <ApperIcon name="Edit3" className="h-4 w-4 mr-2 text-blue-500" />
+                  Modification Requests
+                </h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Review availability for requested dates</li>
+                  <li>• Consider guest circumstances</li>
+                  <li>• Price differences handled automatically</li>
+                  <li>• Communicate decisions promptly</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-};
 
 export default BookingRequests;
