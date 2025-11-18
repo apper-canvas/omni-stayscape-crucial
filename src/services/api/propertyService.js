@@ -1,5 +1,8 @@
 import propertiesData from "@/services/mockData/properties.json";
 
+// Mock availability storage - in production, this would be stored in database
+let propertyAvailability = {};
+
 class PropertyService {
   constructor() {
     this.properties = [...propertiesData];
@@ -38,13 +41,16 @@ async create(property) {
             return `https://example.com/uploads/${image.name}`;
           }
           return image;
-        }) || [];
+}) || [];
         const newProperty = {
           ...property,
           Id: maxId + 1,
           images: processedImages,
           createdAt: new Date().toISOString()
         };
+        
+        // Initialize availability for new property
+        this.initializeAvailability(newProperty.Id);
         this.properties.push(newProperty);
         resolve({ ...newProperty });
       }, 400);
@@ -63,7 +69,7 @@ async create(property) {
             }
             return image;
           }) || [];
-          const updatedProperty = { 
+const updatedProperty = { 
             ...this.properties[index], 
             ...propertyData,
             images: processedImages
@@ -77,7 +83,7 @@ async create(property) {
     });
   }
 
-  async delete(id) {
+async delete(id) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const index = this.properties.findIndex(p => p.Id === parseInt(id));
@@ -91,75 +97,210 @@ async create(property) {
     });
   }
 
-async search(query) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      if (!query) {
-        resolve([...this.properties]);
-        return;
-      }
+  // Initialize availability for a property (default to available for next 365 days)
+  initializeAvailability(propertyId) {
+    if (!propertyAvailability[propertyId]) {
+      propertyAvailability[propertyId] = {};
       
-      const filteredProperties = this.properties.filter(property =>
-        property.title.toLowerCase().includes(query.toLowerCase()) ||
-        property.location.toLowerCase().includes(query.toLowerCase()) ||
-        property.description.toLowerCase().includes(query.toLowerCase())
-      );
-      resolve(filteredProperties);
-    }, 300);
-  });
+      // Set next 365 days as available by default
+      const today = new Date();
+      for (let i = 0; i < 365; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        const dateKey = date.toISOString().split('T')[0];
+        propertyAvailability[propertyId][dateKey] = 'available';
+      }
+    }
+  }
+
+  // Get availability for a specific property and month
+  async getAvailability(propertyId, year, month) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (!propertyAvailability[propertyId]) {
+          this.initializeAvailability(propertyId);
+        }
+
+        // Filter availability for the requested month
+        const monthlyAvailability = {};
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+
+        Object.entries(propertyAvailability[propertyId] || {}).forEach(([dateKey, status]) => {
+          const date = new Date(dateKey);
+          if (date >= firstDay && date <= lastDay) {
+            monthlyAvailability[dateKey] = status;
+          }
+        });
+
+        resolve(monthlyAvailability);
+      }, 300);
+    });
+  },
+
+  // Update availability for specific date
+  async updateAvailability(propertyId, dateKey, status) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          if (!propertyAvailability[propertyId]) {
+            this.initializeAvailability(propertyId);
+          }
+
+          // Validate status
+          const validStatuses = ['available', 'blocked', 'booked'];
+          if (!validStatuses.includes(status)) {
+            throw new Error('Invalid availability status');
+          }
+
+          propertyAvailability[propertyId][dateKey] = status;
+          resolve({ success: true });
+        } catch (error) {
+          reject(error);
+        }
+      }, 200);
+    });
+  },
+
+  // Check if a date is available for booking
+  async isDateAvailable(propertyId, dateKey) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (!propertyAvailability[propertyId]) {
+          this.initializeAvailability(propertyId);
+        }
+
+        const status = propertyAvailability[propertyId][dateKey];
+        resolve(status === 'available');
+      }, 100);
+    });
+  },
+
+  // Check if a date range is available
+  async isDateRangeAvailable(propertyId, startDate, endDate) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (!propertyAvailability[propertyId]) {
+          this.initializeAvailability(propertyId);
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const currentDate = new Date(start);
+
+        while (currentDate <= end) {
+          const dateKey = currentDate.toISOString().split('T')[0];
+          const status = propertyAvailability[propertyId][dateKey];
+          
+          if (status !== 'available') {
+            resolve(false);
+            return;
+          }
+          
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        resolve(true);
+      }, 200);
+    });
+  },
+
+  // Mark dates as booked (called when booking is confirmed)
+  async markDatesAsBooked(propertyId, startDate, endDate) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          if (!propertyAvailability[propertyId]) {
+            this.initializeAvailability(propertyId);
+          }
+
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          const currentDate = new Date(start);
+
+          while (currentDate <= end) {
+            const dateKey = currentDate.toISOString().split('T')[0];
+            propertyAvailability[propertyId][dateKey] = 'booked';
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+
+          resolve({ success: true });
+        } catch (error) {
+          reject(error);
+        }
+      }, 200);
+    });
 }
 
-async filter(criteria) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      let filteredProperties = [...this.properties];
-      
-      // Filter by location
-      if (criteria.location) {
-        filteredProperties = filteredProperties.filter(property =>
-          property.location.toLowerCase().includes(criteria.location.toLowerCase()) ||
-          property.title.toLowerCase().includes(criteria.location.toLowerCase())
+  async search(query) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (!query) {
+          resolve([...this.properties]);
+          return;
+        }
+        
+        const filteredProperties = this.properties.filter(property =>
+          property.title.toLowerCase().includes(query.toLowerCase()) ||
+          property.location.toLowerCase().includes(query.toLowerCase()) ||
+          property.description.toLowerCase().includes(query.toLowerCase())
         );
-      }
-      
-      // Filter by guest capacity
-      if (criteria.guests) {
-        filteredProperties = filteredProperties.filter(property =>
-          property.maxGuests >= criteria.guests
-        );
-      }
-      
-      // Filter by price range
-      if (criteria.priceMin !== null) {
-        filteredProperties = filteredProperties.filter(property =>
-          property.pricePerNight >= criteria.priceMin
-        );
-      }
-      
-      if (criteria.priceMax !== null) {
-        filteredProperties = filteredProperties.filter(property =>
-          property.pricePerNight <= criteria.priceMax
-        );
-      }
-      
-      // Filter by property type
-      if (criteria.propertyType) {
-        filteredProperties = filteredProperties.filter(property =>
-          property.propertyType === criteria.propertyType
-        );
-      }
-      
-      // Filter by minimum bedrooms
-      if (criteria.minBedrooms !== null) {
-        filteredProperties = filteredProperties.filter(property =>
-          property.bedrooms >= criteria.minBedrooms
-        );
-      }
-      
-      resolve(filteredProperties);
-    }, 300);
-  });
-}
+        resolve(filteredProperties);
+      }, 300);
+    });
+  }
+
+  async filter(criteria) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        let filteredProperties = [...this.properties];
+        
+        // Filter by location
+        if (criteria.location) {
+          filteredProperties = filteredProperties.filter(property =>
+            property.location.toLowerCase().includes(criteria.location.toLowerCase()) ||
+            property.title.toLowerCase().includes(criteria.location.toLowerCase())
+          );
+        }
+        
+        // Filter by guest capacity
+        if (criteria.guests) {
+          filteredProperties = filteredProperties.filter(property =>
+            property.maxGuests >= criteria.guests
+          );
+        }
+        
+        // Filter by price range
+        if (criteria.priceMin !== null) {
+          filteredProperties = filteredProperties.filter(property =>
+            property.pricePerNight >= criteria.priceMin
+          );
+        }
+        
+        if (criteria.priceMax !== null) {
+          filteredProperties = filteredProperties.filter(property =>
+            property.pricePerNight <= criteria.priceMax
+          );
+        }
+        
+        // Filter by property type
+        if (criteria.propertyType) {
+          filteredProperties = filteredProperties.filter(property =>
+            property.propertyType === criteria.propertyType
+          );
+        }
+        
+        // Filter by minimum bedrooms
+        if (criteria.minBedrooms !== null) {
+          filteredProperties = filteredProperties.filter(property =>
+            property.bedrooms >= criteria.minBedrooms
+          );
+        }
+        
+        resolve(filteredProperties);
+      }, 300);
+    });
+  }
 }
 
 export const propertyService = new PropertyService();

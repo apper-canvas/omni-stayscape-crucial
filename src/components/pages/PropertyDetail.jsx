@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import Button from "@/components/atoms/Button";
-import Badge from "@/components/atoms/Badge";
-import Loading from "@/components/ui/Loading";
-import ErrorView from "@/components/ui/ErrorView";
-import ApperIcon from "@/components/ApperIcon";
+import AvailabilityCalendar from "@/components/molecules/AvailabilityCalendar";
 import { propertyService } from "@/services/api/propertyService";
 import { bookingService } from "@/services/api/bookingService";
-
+import ApperIcon from "@/components/ApperIcon";
+import Loading from "@/components/ui/Loading";
+import ErrorView from "@/components/ui/ErrorView";
+import Button from "@/components/atoms/Button";
+import Badge from "@/components/atoms/Badge";
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -16,12 +16,13 @@ const PropertyDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [bookingData, setBookingData] = useState({
+const [bookingData, setBookingData] = useState({
     checkIn: "",
     checkOut: "",
     guests: 1,
     guestName: "John Doe"
   });
+  const [showAvailabilityCalendar, setShowAvailabilityCalendar] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
 
   const loadProperty = async () => {
@@ -41,7 +42,7 @@ const PropertyDetail = () => {
   const handleBooking = async (e) => {
     e.preventDefault();
     
-    if (!bookingData.checkIn || !bookingData.checkOut) {
+if (!bookingData.checkIn || !bookingData.checkOut) {
       toast.error("Please select check-in and check-out dates");
       return;
     }
@@ -60,11 +61,27 @@ const PropertyDetail = () => {
       return;
     }
 
-    const totalPrice = nights * property.pricePerNight;
+    // Check availability before booking
+    try {
+      const isAvailable = await propertyService.isDateRangeAvailable(
+        property.Id, 
+        bookingData.checkIn, 
+        bookingData.checkOut
+      );
+      
+      if (!isAvailable) {
+        toast.error("Selected dates are not available. Please choose different dates.");
+        return;
+      }
+    } catch (error) {
+      toast.error("Unable to verify availability. Please try again.");
+      return;
+    }
+const totalPrice = nights * property.pricePerNight;
 
     setBookingLoading(true);
     try {
-      await bookingService.create({
+      const booking = await bookingService.create({
         propertyId: property.Id.toString(),
         guestName: bookingData.guestName,
         checkIn: bookingData.checkIn,
@@ -72,11 +89,25 @@ const PropertyDetail = () => {
         guests: parseInt(bookingData.guests),
         totalPrice: totalPrice
       });
-      
-      toast.success("Booking request submitted successfully!");
-      navigate("/my-bookings");
-    } catch (err) {
-      toast.error(err.message || "Failed to create booking");
+
+      if (booking) {
+        // Mark dates as booked in availability calendar
+        await propertyService.markDatesAsBooked(
+          property.Id,
+          bookingData.checkIn,
+          bookingData.checkOut
+        );
+        
+        toast.success("Booking created successfully!");
+        setBookingData({
+          checkIn: "",
+          checkOut: "",
+          guests: 1,
+          guestName: "John Doe"
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to create booking. Please try again.");
     } finally {
       setBookingLoading(false);
     }
@@ -263,6 +294,29 @@ const PropertyDetail = () => {
           </div>
         </div>
 
+{/* Availability Calendar */}
+        <div className="lg:col-span-2 mb-8">
+          <AvailabilityCalendar 
+            propertyId={property.Id}
+            mode="view"
+            onDateSelect={(date) => {
+              const dateStr = date.toISOString().split('T')[0];
+              if (!bookingData.checkIn || bookingData.checkOut) {
+                setBookingData(prev => ({ 
+                  ...prev, 
+                  checkIn: dateStr, 
+                  checkOut: "" 
+                }));
+              } else {
+                setBookingData(prev => ({ 
+                  ...prev, 
+                  checkOut: dateStr 
+                }));
+              }
+            }}
+          />
+        </div>
+
         {/* Booking Card */}
         <div className="lg:col-span-1">
           <div className="sticky top-6">
@@ -281,7 +335,7 @@ const PropertyDetail = () => {
                 </div>
 
                 <form onSubmit={handleBooking} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
+<div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2 font-body">
                         Check-in

@@ -1,15 +1,15 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { propertyService } from "@/services/api/propertyService";
-import FileDropzone from "@/components/atoms/FileDropzone";
-import ImagePreviewGrid from "@/components/atoms/ImagePreviewGrid";
+import AvailabilityCalendar from "@/components/molecules/AvailabilityCalendar";
 import { cn } from "@/utils/cn";
 import ApperIcon from "@/components/ApperIcon";
+import FileDropzone from "@/components/atoms/FileDropzone";
 import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
+import ImagePreviewGrid from "@/components/atoms/ImagePreviewGrid";
 import TextArea from "@/components/atoms/TextArea";
 import Input from "@/components/atoms/Input";
-
 const PropertyForm = ({ property, onSave, onCancel, className }) => {
 const [currentStep, setCurrentStep] = useState(1);
 const [formData, setFormData] = useState({
@@ -22,8 +22,9 @@ const [formData, setFormData] = useState({
     bathrooms: "",
     propertyType: "",
     amenities: [],
-    images: []
-  });
+images: []
+   });
+   const [showAvailabilityTab, setShowAvailabilityTab] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -57,9 +58,10 @@ useEffect(() => {
         bedrooms: property.bedrooms?.toString() || "",
         bathrooms: property.bathrooms?.toString() || "",
         propertyType: property.propertyType || "",
-        amenities: property.amenities || [],
+amenities: property.amenities || [],
         images: []
       });
+      setShowAvailabilityTab(true); // Show availability tab for existing properties
       // If editing, skip to final step
       if (property) {
         setCurrentStep(totalSteps);
@@ -173,17 +175,25 @@ const handleSubmit = async (e) => {
       } else {
         result = await propertyService.create(propertyData);
         toast.success("Property created successfully!");
+        setShowAvailabilityTab(true); // Show availability tab after creating
       }
 
-      onSave(result);
+      if (result && onSave) {
+        onSave(result);
+        if (!property) {
+          // For new properties, keep form open to manage availability
+          setCurrentStep(4); // Switch to availability tab
+        }
+      }
     } catch (error) {
-      toast.error(error.message || "Failed to save property");
+      console.error('Error saving property:', error);
+      toast.error(property ? 'Failed to update property' : 'Failed to create property');
     } finally {
       setLoading(false);
     }
   };
 
-const nextStep = () => {
+  const nextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
     }
@@ -202,23 +212,35 @@ const nextStep = () => {
       case 2:
         return formData.propertyType && formData.bedrooms && formData.bathrooms && formData.maxGuests;
       case 3:
-return formData.pricePerNight && formData.pricePerNight > 0 && formData.images.filter(img => img.trim()).length > 0;
+        return formData.pricePerNight && formData.pricePerNight > 0 && formData.images.length > 0;
+      case 4:
+        return true; // Availability tab is always valid
       default:
         return false;
     }
   };
 
+  const getStepTitle = (step) => {
+    const titles = ["Basic Info", "Details", "Amenities", "Photos & Pricing", "Availability"];
+    return titles[step] || "Unknown Step";
+  };
+
+  const getTotalSteps = () => showAvailabilityTab ? 5 : 4;
+
   return (
     <div className={cn("max-w-4xl mx-auto", className)}>
       {/* Step Navigation */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold font-display text-gray-900">
-            Step {currentStep} of {totalSteps}: {stepTitles[currentStep]}
-          </h2>
-          <div className="text-sm text-gray-500 font-body">
-            {Math.round((currentStep / totalSteps) * 100)}% Complete
-          </div>
+        <h2 className="text-2xl font-bold text-gray-900 font-display mb-6">
+          {property ? 'Edit Property' : 'Add New Property'}
+        </h2>
+        
+        {/* Step Title */}
+        <div className="text-center mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 font-display">
+            {getStepTitle(currentStep - 1)}
+          </h3>
+        </div>
         </div>
         
         {/* Progress Bar */}
@@ -424,8 +446,26 @@ return formData.pricePerNight && formData.pricePerNight > 0 && formData.images.f
               )}
             </div>
           </div>
-        )}
+)}
 
+        {/* Step 4: Availability Management */}
+        {currentStep === 4 && showAvailabilityTab && (
+          <div className="space-y-6">
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 font-display mb-2">
+                Set Availability
+              </h3>
+              <p className="text-gray-600 font-body">
+                Manage when your property is available for bookings
+              </p>
+            </div>
+            
+            <AvailabilityCalendar 
+              propertyId={property?.Id || formData.Id}
+              mode="manage"
+            />
+          </div>
+        )}
         {/* Form Actions */}
         <div className="flex items-center justify-between pt-6 border-t border-gray-200">
           <div className="flex space-x-4">
@@ -442,7 +482,7 @@ return formData.pricePerNight && formData.pricePerNight > 0 && formData.images.f
             )}
           </div>
           
-          <div className="flex items-center space-x-4">
+<div className="flex items-center space-x-4">
             <Button
               type="button"
               variant="ghost"
@@ -455,30 +495,30 @@ return formData.pricePerNight && formData.pricePerNight > 0 && formData.images.f
             {currentStep < totalSteps ? (
               <Button
                 type="button"
-                variant="primary"
                 onClick={nextStep}
-                disabled={!canProceedToNextStep()}
+                disabled={!canProceedToNextStep() || loading}
+                className="flex items-center space-x-2"
               >
-                Next Step
+                <span>Next</span>
                 <ApperIcon name="ChevronRight" className="h-4 w-4 ml-2" />
+              </Button>
+            ) : currentStep === 4 && showAvailabilityTab ? (
+              <Button
+                type="button"
+                onClick={onCancel}
+                className="flex items-center space-x-2"
+              >
+                <span>Done</span>
+                <ApperIcon name="Check" className="h-4 w-4 ml-2" />
               </Button>
             ) : (
               <Button
                 type="submit"
-                variant="primary"
-                disabled={loading}
+                disabled={loading || !canProceedToNextStep()}
+                className="flex items-center space-x-2"
               >
-                {loading ? (
-                  <>
-                    <ApperIcon name="Loader2" className="h-4 w-4 mr-2 animate-spin" />
-                    {property ? "Updating..." : "Creating..."}
-                  </>
-                ) : (
-                  <>
-                    <ApperIcon name="Save" className="h-4 w-4 mr-2" />
-                    {property ? "Update Property" : "Create Property"}
-                  </>
-                )}
+                {loading && <ApperIcon name="Loader2" className="h-4 w-4 mr-2 animate-spin" />}
+                <span>{property ? "Update Property" : "Create Property"}</span>
               </Button>
             )}
           </div>
@@ -486,6 +526,7 @@ return formData.pricePerNight && formData.pricePerNight > 0 && formData.images.f
       </form>
     </div>
   );
+    </div>
 };
 
 export default PropertyForm;

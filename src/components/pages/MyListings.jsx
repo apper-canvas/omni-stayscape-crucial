@@ -1,21 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import AvailabilityCalendar from "@/components/molecules/AvailabilityCalendar";
 import { toast } from "react-toastify";
-import Button from "@/components/atoms/Button";
+import { propertyService } from "@/services/api/propertyService";
+import ApperIcon from "@/components/ApperIcon";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import ErrorView from "@/components/ui/ErrorView";
 import PropertyGrid from "@/components/organisms/PropertyGrid";
 import PropertyForm from "@/components/organisms/PropertyForm";
-import Loading from "@/components/ui/Loading";
-import ErrorView from "@/components/ui/ErrorView";
-import Empty from "@/components/ui/Empty";
-import ApperIcon from "@/components/ApperIcon";
-import { propertyService } from "@/services/api/propertyService";
+import Button from "@/components/atoms/Button";
 
 const MyListings = () => {
-  const [properties, setProperties] = useState([]);
+const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingProperty, setEditingProperty] = useState(null);
-
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
   const loadProperties = async () => {
     setLoading(true);
     setError("");
@@ -32,9 +33,15 @@ const MyListings = () => {
     }
   };
 
-  const handleEditProperty = (property) => {
+const handleEditProperty = (property) => {
     setEditingProperty(property);
     setShowForm(true);
+  };
+
+  const handleManageAvailability = (property) => {
+    // Navigate to availability management or show modal
+    setEditingProperty(property);
+    setShowAvailabilityModal(true);
   };
 
   const handleDeleteProperty = async (propertyId) => {
@@ -203,33 +210,62 @@ const MyListings = () => {
       </div>
 
       {/* Property Grid */}
-      <PropertyGrid
+<PropertyGrid
         properties={properties}
         showActions={true}
         onEditProperty={handleEditProperty}
         onDeleteProperty={handleDeleteProperty}
+        onManageAvailability={handleManageAvailability}
       />
 
       {/* Help Section */}
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 text-center mt-12">
-        <div className="max-w-2xl mx-auto">
-          <ApperIcon name="HelpCircle" className="h-12 w-12 text-primary-600 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold font-display text-gray-900 mb-4">
-            Need help managing your listings?
-          </h3>
-          <p className="text-gray-600 font-body mb-6">
-            Our support team is here to help you optimize your properties, increase bookings, and maximize your earnings.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="primary">
-              <ApperIcon name="MessageCircle" className="h-4 w-4 mr-2" />
-              Contact Support
-            </Button>
-            <Button variant="outline">
-              <ApperIcon name="BookOpen" className="h-4 w-4 mr-2" />
-              Host Resources
-            </Button>
+{/* Availability Management Modal */}
+      {showAvailabilityModal && editingProperty && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900 font-display">
+                  Manage Availability - {editingProperty.title}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowAvailabilityModal(false);
+                    setEditingProperty(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <ApperIcon name="X" size={24} />
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <AvailabilityCalendar 
+                propertyId={editingProperty.Id}
+                mode="manage"
+              />
+            </div>
           </div>
+        </div>
+      )}
+{/* Help Section */}
+      <div className="max-w-2xl mx-auto mt-12">
+        <ApperIcon name="HelpCircle" className="h-12 w-12 text-primary-600 mx-auto mb-4" />
+        <h3 className="text-2xl font-bold font-display text-gray-900 mb-4 text-center">
+          Need help managing your listings?
+        </h3>
+        <p className="text-gray-600 font-body mb-6 text-center">
+          Our support team is here to help you optimize your properties, increase bookings, and maximize your earnings.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button variant="primary">
+            <ApperIcon name="MessageCircle" className="h-4 w-4 mr-2" />
+            Contact Support
+          </Button>
+          <Button variant="outline">
+            <ApperIcon name="BookOpen" className="h-4 w-4 mr-2" />
+            Host Resources
+          </Button>
         </div>
       </div>
     </div>
