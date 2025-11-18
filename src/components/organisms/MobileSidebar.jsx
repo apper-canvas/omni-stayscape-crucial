@@ -6,8 +6,9 @@ import NavItem from "@/components/molecules/NavItem";
 
 const MobileSidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
-  const navigation = [
+const navigation = [
     { name: "Browse Properties", href: "", icon: "Search" },
+    { name: "My Wishlist", href: "my-wishlist", icon: "Heart" },
     { name: "My Listings", href: "my-listings", icon: "Building" },
     { name: "My Bookings", href: "my-bookings", icon: "Calendar" },
   ];

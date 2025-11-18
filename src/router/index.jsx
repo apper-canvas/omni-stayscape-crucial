@@ -8,6 +8,7 @@ const MyListings = lazy(() => import("@/components/pages/MyListings"));
 const BookingRequests = lazy(() => import("@/components/pages/BookingRequests"));
 const MyBookings = lazy(() => import("@/components/pages/MyBookings"));
 const PropertyDetail = lazy(() => import("@/components/pages/PropertyDetail"));
+const MyWishlist = lazy(() => import("@/components/pages/MyWishlist"));
 const NotFound = lazy(() => import("@/components/pages/NotFound"));
 const Messages = lazy(() => import("@/components/pages/Messages"));
 const GuestProfile = lazy(() => import("@/components/pages/GuestProfile"));
@@ -35,7 +36,11 @@ const mainRoutes = [
   },
   {
     path: "my-listings",
-    element: <SuspenseLoader><MyListings /></SuspenseLoader>
+element: <SuspenseLoader><MyListings /></SuspenseLoader>
+  },
+  {
+    path: "my-wishlist",
+    element: <SuspenseLoader><MyWishlist /></SuspenseLoader>
   },
   {
     path: "my-bookings", 

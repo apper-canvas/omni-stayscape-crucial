@@ -5,8 +5,9 @@ import ApperIcon from "@/components/ApperIcon";
 import NavItem from "@/components/molecules/NavItem";
 
 const Sidebar = ({ isOpen, className }) => {
-  const navigationItems = [
+const navigationItems = [
     { to: "", icon: "Home", label: "Browse Properties" },
+    { to: "my-wishlist", icon: "Heart", label: "My Wishlist" },
     { to: "my-listings", icon: "Building", label: "My Listings" },
     { to: "booking-requests", icon: "Calendar", label: "Booking Requests" },
     { to: "my-bookings", icon: "CreditCard", label: "My Bookings" }

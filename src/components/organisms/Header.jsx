@@ -6,23 +6,28 @@ import ApperIcon from "@/components/ApperIcon";
 import SearchBar from "@/components/molecules/SearchBar";
 const Header = ({ onSearch, onMobileMenuToggle, className }) => {
   const navigate = useNavigate();
-  const [unreadCount, setUnreadCount] = useState(0);
+const [unreadCount, setUnreadCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-  useEffect(() => {
-    const loadUnreadCount = async () => {
+useEffect(() => {
+    const loadCounts = async () => {
       try {
-        const count = await messageService.getTotalUnreadCount();
-        setUnreadCount(count);
+        const [unreadMsgCount, wishlistItemCount] = await Promise.all([
+          messageService.getTotalUnreadCount(),
+          import('@/services/api/wishlistService').then(m => m.wishlistService.getCount())
+        ]);
+        setUnreadCount(unreadMsgCount);
+        setWishlistCount(wishlistItemCount);
       } catch (error) {
-        console.error('Error loading unread count:', error);
+        console.error('Error loading counts:', error);
       }
     };
 
-    loadUnreadCount();
+    loadCounts();
     
-    // Set up polling for unread count updates
-    const interval = setInterval(loadUnreadCount, 30000); // Check every 30 seconds
+    // Set up polling for count updates
+    const interval = setInterval(loadCounts, 30000); // Check every 30 seconds
     
     return () => clearInterval(interval);
   }, []);
@@ -84,9 +89,17 @@ const Header = ({ onSearch, onMobileMenuToggle, className }) => {
                 </span>
               )}
             </button>
-            <button className="hidden sm:flex items-center px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors font-body">
+<button 
+              onClick={() => navigate('/my-wishlist')}
+              className="hidden sm:flex items-center px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors font-body relative"
+            >
               <ApperIcon name="Heart" className="h-5 w-5 mr-2" />
               Favorites
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {wishlistCount > 99 ? '99+' : wishlistCount}
+                </span>
+              )}
             </button>
             <button className="hidden sm:flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors font-body">
               <ApperIcon name="User" className="h-5 w-5 mr-2" />
