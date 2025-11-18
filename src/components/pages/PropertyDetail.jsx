@@ -372,7 +372,7 @@ useEffect(() => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Property Details */}
         <div className="lg:col-span-2 space-y-8">
           {/* Description */}
@@ -399,105 +399,107 @@ useEffect(() => {
               ))}
             </div>
           </div>
-</div>
 
-        {/* House Rules Section */}
-        {property.houseRules && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-              <ApperIcon name="Shield" className="h-5 w-5 mr-2 text-primary-600" />
-              House Rules
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                <ApperIcon name="Clock" className="h-5 w-5 text-primary-600 mr-3" />
-                <div>
-                  <p className="font-medium text-gray-900">Check-in</p>
-                  <p className="text-gray-600">{property.houseRules.checkInTime}</p>
-                </div>
-              </div>
+          {/* House Rules Section */}
+          {property.houseRules && (
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h2 className="text-2xl font-bold font-display text-gray-900 mb-6 flex items-center">
+                <ApperIcon name="Shield" className="h-5 w-5 mr-2 text-primary-600" />
+                House Rules
+              </h2>
               
-              <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                <ApperIcon name="Clock" className="h-5 w-5 text-primary-600 mr-3" />
-                <div>
-                  <p className="font-medium text-gray-900">Check-out</p>
-                  <p className="text-gray-600">{property.houseRules.checkOutTime}</p>
-                </div>
-              </div>
-              
-              {property.houseRules.quietHours && (
-                <div className="flex items-center p-4 bg-gray-50 rounded-lg md:col-span-2">
-                  <ApperIcon name="Moon" className="h-5 w-5 text-primary-600 mr-3" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                  <ApperIcon name="Clock" className="h-5 w-5 text-primary-600 mr-3" />
                   <div>
-                    <p className="font-medium text-gray-900">Quiet Hours</p>
-                    <p className="text-gray-600">{property.houseRules.quietHours}</p>
+                    <p className="font-medium text-gray-900">Check-in</p>
+                    <p className="text-gray-600">{property.houseRules.checkInTime}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                  <ApperIcon name="Clock" className="h-5 w-5 text-primary-600 mr-3" />
+                  <div>
+                    <p className="font-medium text-gray-900">Check-out</p>
+                    <p className="text-gray-600">{property.houseRules.checkOutTime}</p>
+                  </div>
+                </div>
+                
+                {property.houseRules.quietHours && (
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg md:col-span-2">
+                    <ApperIcon name="Moon" className="h-5 w-5 text-primary-600 mr-3" />
+                    <div>
+                      <p className="font-medium text-gray-900">Quiet Hours</p>
+                      <p className="text-gray-600">{property.houseRules.quietHours}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <h4 className="font-semibold text-gray-900">Property Policies</h4>
+                
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <ApperIcon name="Cigarette" className="h-4 w-4 text-gray-600 mr-3" />
+                    <span className="text-gray-700">Smoking</span>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    property.houseRules.smokingAllowed 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {property.houseRules.smokingAllowed ? 'Allowed' : 'Not Allowed'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <ApperIcon name="Heart" className="h-4 w-4 text-gray-600 mr-3" />
+                    <span className="text-gray-700">Pets</span>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    property.houseRules.petsAllowed 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {property.houseRules.petsAllowed ? 'Allowed' : 'Not Allowed'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <ApperIcon name="Music" className="h-4 w-4 text-gray-600 mr-3" />
+                    <span className="text-gray-700">Parties/Events</span>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    property.houseRules.partiesAllowed 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {property.houseRules.partiesAllowed ? 'Allowed' : 'Not Allowed'}
+                  </span>
+                </div>
+              </div>
+
+              {property.houseRules.additionalRules && (
+                <div className="border-t border-gray-200 pt-4">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <ApperIcon name="FileText" className="h-4 w-4 mr-2" />
+                    Additional Rules & Guidelines
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-700 whitespace-pre-line">{property.houseRules.additionalRules}</p>
                   </div>
                 </div>
               )}
             </div>
+          )}
+        </div>
 
-            <div className="space-y-3 mb-6">
-              <h4 className="font-semibold text-gray-900">Property Policies</h4>
-              
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <ApperIcon name="Cigarette" className="h-4 w-4 text-gray-600 mr-3" />
-                  <span className="text-gray-700">Smoking</span>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  property.houseRules.smokingAllowed 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {property.houseRules.smokingAllowed ? 'Allowed' : 'Not Allowed'}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <ApperIcon name="Heart" className="h-4 w-4 text-gray-600 mr-3" />
-                  <span className="text-gray-700">Pets</span>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  property.houseRules.petsAllowed 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {property.houseRules.petsAllowed ? 'Allowed' : 'Not Allowed'}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <ApperIcon name="Music" className="h-4 w-4 text-gray-600 mr-3" />
-                  <span className="text-gray-700">Parties/Events</span>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  property.houseRules.partiesAllowed 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {property.houseRules.partiesAllowed ? 'Allowed' : 'Not Allowed'}
-                </span>
-              </div>
-            </div>
-
-            {property.houseRules.additionalRules && (
-              <div className="border-t border-gray-200 pt-4">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                  <ApperIcon name="FileText" className="h-4 w-4 mr-2" />
-                  Additional Rules & Guidelines
-                </h4>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-700 whitespace-pre-line">{property.houseRules.additionalRules}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-          
+        {/* House Rules Section */}
+{/* Booking Card */}
+        <div className="lg:col-span-1">
           {/* Booking Card */}
         <div className="lg:col-span-1">
           <div className="sticky top-6">
@@ -785,11 +787,11 @@ useEffect(() => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Reviews Yet</h3>
               <p className="text-gray-600">Be the first to share your experience with this property!</p>
             </div>
+</div>
           )}
         </div>
-</div>
+      </div>
     </div>
   );
-};
 
 export default PropertyDetail;
