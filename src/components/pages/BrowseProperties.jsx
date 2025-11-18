@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { divIcon } from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { propertyService } from "@/services/api/propertyService";
 import ApperIcon from "@/components/ApperIcon";
 import Loading from "@/components/ui/Loading";
@@ -10,13 +13,15 @@ import PropertyGrid from "@/components/organisms/PropertyGrid";
 import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
-
 const BrowseProperties = () => {
 const { searchQuery } = useOutletContext();
 const [properties, setProperties] = useState([]);
 const [filteredProperties, setFilteredProperties] = useState([]);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState("");
+const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+const [mapCenter, setMapCenter] = useState([40.7128, -74.0060]); // Default to NYC
+const [mapZoom, setMapZoom] = useState(10);
 
 // Filter states
 const [filters, setFilters] = useState({
@@ -39,6 +44,11 @@ const loadProperties = async () => {
     const data = await propertyService.getAll();
     setProperties(data);
     setFilteredProperties(data);
+    
+    // Set map center to first property location if available
+    if (data.length > 0 && data[0].location?.coordinates) {
+      setMapCenter([data[0].location.coordinates.lat, data[0].location.coordinates.lng]);
+    }
   } catch (err) {
     setError(err.message || "Failed to load properties");
     toast.error("Failed to load properties");
@@ -80,6 +90,42 @@ const applyFilters = async () => {
   }
 };
 
+const handleMapMove = async (bounds) => {
+  // Search properties within map bounds
+  try {
+    const allProperties = await propertyService.getAll();
+    const visibleProperties = allProperties.filter(property => {
+      if (!property.location?.coordinates) return false;
+      
+      const lat = property.location.coordinates.lat;
+      const lng = property.location.coordinates.lng;
+      
+      return lat >= bounds.getSouth() && 
+             lat <= bounds.getNorth() && 
+             lng >= bounds.getWest() && 
+             lng <= bounds.getEast();
+    });
+    
+    setFilteredProperties(visibleProperties);
+    toast.info(`Found ${visibleProperties.length} properties in this area`);
+  } catch (err) {
+    toast.error("Failed to search area");
+  }
+};
+
+const createPropertyIcon = (price) => {
+  return divIcon({
+    html: `
+      <div class="bg-white border-2 border-primary-500 rounded-full px-3 py-1 shadow-lg font-bold text-sm text-primary-600 hover:bg-primary-50 transition-colors cursor-pointer">
+        $${price}
+      </div>
+    `,
+    className: 'custom-marker',
+    iconSize: [60, 30],
+    iconAnchor: [30, 30]
+  });
+};
+
 const handleFilterChange = (key, value) => {
   setFilters(prev => ({
     ...prev,
@@ -112,6 +158,10 @@ useEffect(() => {
     applyFilters();
   }
 }, [searchQuery, properties, filters]);
+
+useEffect(() => {
+  loadProperties();
+}, []);
 
   if (loading) {
     return <Loading variant="grid" />;
@@ -167,7 +217,7 @@ if (filteredProperties.length === 0 && (searchQuery || Object.values(filters).so
     );
   }
 
-  return (
+return (
 <div className="space-y-6">
   {/* Header */}
   <div className="flex items-center justify-between">
@@ -194,6 +244,28 @@ if (filteredProperties.length === 0 && (searchQuery || Object.values(filters).so
           }
         })()}
       </p>
+    </div>
+    
+    {/* View Toggle */}
+    <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 p-1">
+      <Button
+        variant={viewMode === 'list' ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => setViewMode('list')}
+        className="px-4 py-2"
+      >
+        <ApperIcon name="List" size={16} />
+        <span className="ml-2 hidden sm:inline">List</span>
+      </Button>
+      <Button
+        variant={viewMode === 'map' ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => setViewMode('map')}
+        className="px-4 py-2"
+      >
+        <ApperIcon name="Map" size={16} />
+        <span className="ml-2 hidden sm:inline">Map</span>
+      </Button>
     </div>
   </div>
 
@@ -371,87 +443,163 @@ if (filteredProperties.length === 0 && (searchQuery || Object.values(filters).so
     </div>
   )}
 
-{/* Featured Properties Section */}
-{!searchQuery && filteredProperties.length > 0 && Object.values(filters).every(f => !f) && (
-  <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-8 mb-8">
-    <div className="text-center mb-6">
-      <h2 className="text-2xl font-bold font-display text-gray-900 mb-2">
-        Featured Properties
-      </h2>
-      <p className="text-gray-600 font-body">
-        Handpicked by our team for exceptional experiences
-      </p>
-    </div>
-    <PropertyGrid 
-      properties={filteredProperties.slice(0, 4)}
-      className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
-    />
+{/* Map View */}
+{viewMode === 'map' && (
+  <div className="h-96 sm:h-[600px] rounded-xl overflow-hidden border border-gray-200 shadow-lg">
+    <MapContainer
+      center={mapCenter}
+      zoom={mapZoom}
+      scrollWheelZoom={true}
+      className="h-full w-full"
+      whenCreated={(map) => {
+        map.on('moveend', () => {
+          const bounds = map.getBounds();
+          handleMapMove(bounds);
+        });
+      }}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      {filteredProperties.map((property) => {
+        if (!property.location?.coordinates) return null;
+        
+        return (
+          <Marker
+            key={property.Id}
+            position={[property.location.coordinates.lat, property.location.coordinates.lng]}
+            icon={createPropertyIcon(property.pricePerNight)}
+          >
+            <Popup className="custom-popup">
+              <div className="w-64 p-2">
+                <div className="aspect-w-16 aspect-h-9 mb-3">
+                  <img
+                    src={property.images?.[0] || '/placeholder-property.jpg'}
+                    alt={property.title}
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
+                </div>
+                <h3 className="font-display font-semibold text-gray-900 mb-2 line-clamp-2">
+                  {property.title}
+                </h3>
+                <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                  <ApperIcon name="MapPin" size={14} />
+                  <span>{property.location?.address}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ApperIcon name="Star" size={14} className="text-yellow-400" />
+                    <span className="text-sm font-medium">
+                      {property.averageRating || 'New'}
+                    </span>
+                  </div>
+                  <div className="font-bold text-primary-600">
+                    ${property.pricePerNight}/night
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  className="w-full mt-3"
+                  onClick={() => window.location.href = `/property/${property.Id}`}
+                >
+                  View Details
+                </Button>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
+    </MapContainer>
   </div>
 )}
 
-{/* Instant Book Properties Section */}
-{!searchQuery && filteredProperties.length > 0 && Object.values(filters).every(f => !f) && (
-  (() => {
-    const instantBookProperties = filteredProperties.filter(p => p.instantBook);
-    return instantBookProperties.length > 0 && (
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-8 mb-8">
+{/* List View */}
+{viewMode === 'list' && (
+  <>
+    {/* Featured Properties Section */}
+    {!searchQuery && filteredProperties.length > 0 && Object.values(filters).every(f => !f) && (
+      <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-8 mb-8">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold font-display text-gray-900 mb-2 flex items-center justify-center gap-3">
-            <ApperIcon name="Zap" className="h-6 w-6 text-green-600" />
-            Instant Book Properties
+          <h2 className="text-2xl font-bold font-display text-gray-900 mb-2">
+            Featured Properties
           </h2>
           <p className="text-gray-600 font-body">
-            Book immediately without waiting for host approval
+            Handpicked by our team for exceptional experiences
           </p>
         </div>
         <PropertyGrid 
-          properties={instantBookProperties.slice(0, 4)}
+          properties={filteredProperties.slice(0, 4)}
           className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
         />
       </div>
-    );
-  })()
-)}
+    )}
 
-{/* All Properties */}
-<div>
-  {!searchQuery && Object.values(filters).every(f => !f) && (
-    <div className="mb-6">
-      <h2 className="text-2xl font-bold font-display text-gray-900 mb-2">
-        All Properties
-      </h2>
-      <p className="text-gray-600 font-body">
-        Browse through our complete collection of vacation rentals
-      </p>
-    </div>
-  )}
-  <PropertyGrid 
-    properties={searchQuery ? filteredProperties : 
-      (Object.values(filters).every(f => !f) ? filteredProperties.slice(4) : filteredProperties)}
-  />
-</div>
-
-      {/* Call to Action */}
-      {!searchQuery && (
-        <div className="bg-gradient-to-br from-accent-50 to-secondary-50 rounded-2xl p-8 text-center mt-12">
-          <div className="max-w-2xl mx-auto">
-            <h3 className="text-2xl font-bold font-display text-gray-900 mb-4">
-              Can't find what you're looking for?
-            </h3>
-            <p className="text-gray-600 font-body mb-6">
-              Join thousands of hosts who are earning extra income by sharing their unique spaces with travelers from around the world.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white font-medium rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all duration-200 font-body">
-                List Your Property
-              </button>
-              <button className="px-8 py-3 border-2 border-primary-500 text-primary-600 font-medium rounded-lg hover:bg-primary-50 transition-all duration-200 font-body">
-                Get Host Support
-              </button>
+    {/* Instant Book Properties Section */}
+    {!searchQuery && filteredProperties.length > 0 && Object.values(filters).every(f => !f) && (
+      (() => {
+        const instantBookProperties = filteredProperties.filter(p => p.instantBook);
+        return instantBookProperties.length > 0 && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-8 mb-8">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold font-display text-gray-900 mb-2 flex items-center justify-center gap-3">
+                <ApperIcon name="Zap" className="h-6 w-6 text-green-600" />
+                Instant Book Properties
+              </h2>
+              <p className="text-gray-600 font-body">
+                Book immediately without waiting for host approval
+              </p>
             </div>
+            <PropertyGrid 
+              properties={instantBookProperties.slice(0, 4)}
+              className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+            />
           </div>
+        );
+      })()
+    )}
+
+    {/* All Properties */}
+    <div>
+      {!searchQuery && Object.values(filters).every(f => !f) && (
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold font-display text-gray-900 mb-2">
+            All Properties
+          </h2>
+          <p className="text-gray-600 font-body">
+            Browse through our complete collection of vacation rentals
+          </p>
         </div>
       )}
+      <PropertyGrid 
+        properties={searchQuery ? filteredProperties : 
+          (Object.values(filters).every(f => !f) ? filteredProperties.slice(4) : filteredProperties)}
+      />
+    </div>
+
+    {/* Call to Action */}
+    {!searchQuery && (
+      <div className="bg-gradient-to-br from-accent-50 to-secondary-50 rounded-2xl p-8 text-center mt-12">
+        <div className="max-w-2xl mx-auto">
+          <h3 className="text-2xl font-bold font-display text-gray-900 mb-4">
+            Can't find what you're looking for?
+          </h3>
+          <p className="text-gray-600 font-body mb-6">
+            Join thousands of hosts who are earning extra income by sharing their unique spaces with travelers from around the world.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button className="px-8 py-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white font-medium rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all duration-200 font-body">
+              List Your Property
+            </button>
+            <button className="px-8 py-3 border-2 border-primary-500 text-primary-600 font-medium rounded-lg hover:bg-primary-50 transition-all duration-200 font-body">
+              Get Host Support
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
+)}
     </div>
   );
 };
