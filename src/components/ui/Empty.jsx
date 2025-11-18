@@ -13,11 +13,11 @@ const Empty = ({
   variant = "default"
 }) => {
   const variants = {
-    properties: {
+properties: {
       icon: "Search",
       title: "No properties found",
-      message: "We couldn't find any properties matching your search. Try adjusting your filters or search terms.",
-      actionLabel: "Browse All Properties"
+      message: "We couldn't find any properties matching your search criteria. Try adjusting your dates, location, or other filters.",
+      actionLabel: "Clear Filters"
     },
     listings: {
       icon: "Building",
@@ -75,15 +75,19 @@ const Empty = ({
             </Button>
             
             {/* Secondary Actions */}
-            {variant === "properties" && (
-              <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                <Button variant="outline" size="sm">
-                  <ApperIcon name="Filter" className="h-4 w-4 mr-2" />
-                  Clear Filters
+{variant === "properties" && (
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-2">
+                <Button variant="outline" size="sm" onClick={onAction}>
+                  <ApperIcon name="RotateCcw" className="h-4 w-4 mr-2" />
+                  {actionLabel || "Reset Search"}
                 </Button>
                 <Button variant="ghost" size="sm">
-                  <ApperIcon name="HelpCircle" className="h-4 w-4 mr-2" />
-                  Search Tips
+                  <ApperIcon name="Calendar" className="h-4 w-4 mr-2" />
+                  Try Different Dates
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <ApperIcon name="MapPin" className="h-4 w-4 mr-2" />
+                  Browse All Locations
                 </Button>
               </div>
             )}

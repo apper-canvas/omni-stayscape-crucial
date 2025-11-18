@@ -273,7 +273,7 @@ reject(error);
     });
   }
 
-  async filter(criteria) {
+async filter(criteria) {
     return new Promise((resolve) => {
       setTimeout(() => {
         let filteredProperties = [...this.properties];
@@ -318,6 +318,63 @@ reject(error);
           filteredProperties = filteredProperties.filter(property =>
             property.bedrooms >= criteria.minBedrooms
           );
+        }
+        
+        // Filter by availability (check-in and check-out dates)
+        if (criteria.checkIn || criteria.checkOut) {
+          filteredProperties = filteredProperties.filter(property => {
+            // Simulate availability checking
+            // In real implementation, this would check against booking records
+            const propertyId = property.Id;
+            const checkIn = criteria.checkIn ? new Date(criteria.checkIn) : null;
+            const checkOut = criteria.checkOut ? new Date(criteria.checkOut) : null;
+            
+            // Simple availability simulation: assume some properties are booked on certain date ranges
+            const mockBookedDates = [
+              // Property 1 booked Dec 15-25, 2024
+              { propertyId: 1, start: new Date('2024-12-15'), end: new Date('2024-12-25') },
+              // Property 2 booked Jan 1-7, 2025  
+              { propertyId: 2, start: new Date('2025-01-01'), end: new Date('2025-01-07') },
+              // Property 3 booked Feb 10-20, 2025
+              { propertyId: 3, start: new Date('2025-02-10'), end: new Date('2025-02-20') }
+            ];
+            
+            // Check if the requested dates conflict with any bookings for this property
+            const hasConflict = mockBookedDates.some(booking => {
+              if (booking.propertyId !== propertyId) return false;
+              
+              // If only check-in provided, assume 1-night stay
+              const userCheckOut = checkOut || (checkIn ? new Date(checkIn.getTime() + 24*60*60*1000) : null);
+              
+              if (!checkIn || !userCheckOut) return false;
+              
+              // Check for date overlap
+              return (checkIn < booking.end && userCheckOut > booking.start);
+            });
+            
+            return !hasConflict;
+          });
+        }
+        
+        // Apply sorting
+        if (criteria.sortBy) {
+          switch (criteria.sortBy) {
+            case 'price_low':
+              filteredProperties.sort((a, b) => a.pricePerNight - b.pricePerNight);
+              break;
+            case 'price_high':
+              filteredProperties.sort((a, b) => b.pricePerNight - a.pricePerNight);
+              break;
+            case 'rating':
+              filteredProperties.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+              break;
+            case 'newest':
+              // Sort by Id descending (assuming higher Id = newer listing)
+              filteredProperties.sort((a, b) => b.Id - a.Id);
+              break;
+            default:
+              break;
+          }
         }
         
         resolve(filteredProperties);

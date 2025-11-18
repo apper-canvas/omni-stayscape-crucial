@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
-import PropertyGrid from "@/components/organisms/PropertyGrid";
+import { propertyService } from "@/services/api/propertyService";
+import ApperIcon from "@/components/ApperIcon";
 import Loading from "@/components/ui/Loading";
-import ErrorView from "@/components/ui/ErrorView";
 import Empty from "@/components/ui/Empty";
-import Input from "@/components/atoms/Input";
+import ErrorView from "@/components/ui/ErrorView";
+import PropertyGrid from "@/components/organisms/PropertyGrid";
 import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
-import ApperIcon from "@/components/ApperIcon";
-import { propertyService } from "@/services/api/propertyService";
+import Input from "@/components/atoms/Input";
 
 const BrowseProperties = () => {
 const { searchQuery } = useOutletContext();
@@ -25,7 +25,10 @@ const [filters, setFilters] = useState({
   priceMin: "",
   priceMax: "",
   propertyType: "",
-  minBedrooms: ""
+  minBedrooms: "",
+  checkIn: "",
+  checkOut: "",
+  sortBy: ""
 });
 
 const loadProperties = async () => {
@@ -66,11 +69,14 @@ const applyFilters = async () => {
       priceMin: filters.priceMin ? parseFloat(filters.priceMin) : null,
       priceMax: filters.priceMax ? parseFloat(filters.priceMax) : null,
       propertyType: filters.propertyType,
-      minBedrooms: filters.minBedrooms ? parseInt(filters.minBedrooms) : null
+      minBedrooms: filters.minBedrooms ? parseInt(filters.minBedrooms) : null,
+      checkIn: filters.checkIn || null,
+      checkOut: filters.checkOut || null,
+      sortBy: filters.sortBy || null
     });
     setFilteredProperties(results);
   } catch (err) {
-    toast.error("Filter failed");
+    toast.error("Search failed - please try again");
   }
 };
 
@@ -88,7 +94,10 @@ const clearFilters = () => {
     priceMin: "",
     priceMax: "",
     propertyType: "",
-    minBedrooms: ""
+    minBedrooms: "",
+    checkIn: "",
+    checkOut: "",
+    sortBy: ""
   });
 };
 
@@ -118,23 +127,42 @@ useEffect(() => {
     );
   }
 
-  if (filteredProperties.length === 0 && properties.length === 0) {
+if (filteredProperties.length === 0 && properties.length === 0) {
     return (
       <Empty
         variant="properties"
+        title="No properties available"
+        message="We're currently updating our property listings. Please check back soon for amazing vacation rentals."
+        actionLabel="Refresh Page"
         onAction={() => window.location.reload()}
       />
     );
   }
 
-  if (filteredProperties.length === 0 && searchQuery) {
+if (filteredProperties.length === 0 && (searchQuery || Object.values(filters).some(f => f))) {
+    const hasDateFilter = filters.checkIn || filters.checkOut;
+    const hasOtherFilters = filters.location || filters.guests || filters.priceMin || filters.priceMax || filters.propertyType || filters.minBedrooms;
+    
+    let title = "No properties found";
+    let message = "We couldn't find any properties matching your criteria.";
+    
+    if (searchQuery && hasDateFilter) {
+      message = `No properties available for "${searchQuery}" during your selected dates. Try different dates or locations.`;
+    } else if (searchQuery) {
+      message = `No properties found for "${searchQuery}". Try different search terms or adjust your filters.`;
+    } else if (hasDateFilter) {
+      message = "No properties available for your selected dates. Try different dates or adjust other filters.";
+    } else if (hasOtherFilters) {
+      message = "No properties match your current filters. Try adjusting your search criteria.";
+    }
+    
     return (
       <Empty
         variant="properties"
-        title="No properties found"
-        message={`We couldn't find any properties matching "${searchQuery}". Try different search terms or browse all properties.`}
-        actionLabel="Clear Search"
-        onAction={() => handleSearch("")}
+        title={title}
+        message={message}
+        actionLabel={searchQuery ? "Clear Search" : "Clear Filters"}
+        onAction={searchQuery ? () => handleSearch("") : clearFilters}
       />
     );
   }
@@ -148,10 +176,23 @@ useEffect(() => {
         Discover Amazing Places
       </h1>
       <p className="text-gray-600 font-body mt-2">
-        {searchQuery 
-          ? `${filteredProperties.length} properties found for "${searchQuery}"`
-          : `${filteredProperties.length} properties available`
-        }
+{(() => {
+          const hasFilters = Object.values(filters).some(f => f);
+          const sortLabel = filters.sortBy ? 
+            ` (sorted by ${filters.sortBy === 'price_low' ? 'price: low to high' : 
+            filters.sortBy === 'price_high' ? 'price: high to low' :
+            filters.sortBy === 'rating' ? 'guest rating' : 'newest listings'})` : '';
+          
+          if (searchQuery && hasFilters) {
+            return `${filteredProperties.length} properties found for "${searchQuery}" with filters${sortLabel}`;
+          } else if (searchQuery) {
+            return `${filteredProperties.length} properties found for "${searchQuery}"${sortLabel}`;
+          } else if (hasFilters) {
+            return `${filteredProperties.length} properties match your filters${sortLabel}`;
+          } else {
+            return `${filteredProperties.length} properties available${sortLabel}`;
+          }
+        })()}
       </p>
     </div>
   </div>
@@ -159,7 +200,7 @@ useEffect(() => {
   {/* Search and Filter Controls */}
   {!searchQuery && (
     <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4 mb-4">
         {/* Location Search */}
         <div className="space-y-1">
           <label className="text-sm font-medium text-gray-700">Location</label>
@@ -169,6 +210,36 @@ useEffect(() => {
               placeholder="Where to?"
               value={filters.location}
               onChange={(e) => handleFilterChange('location', e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {/* Check-in Date */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-gray-700">Check-in</label>
+          <div className="relative">
+            <ApperIcon name="Calendar" className="absolute left-3 top-3 text-gray-400" size={16} />
+            <Input
+              type="date"
+              value={filters.checkIn}
+              onChange={(e) => handleFilterChange('checkIn', e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {/* Check-out Date */}
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-gray-700">Check-out</label>
+          <div className="relative">
+            <ApperIcon name="Calendar" className="absolute left-3 top-3 text-gray-400" size={16} />
+            <Input
+              type="date"
+              value={filters.checkOut}
+              onChange={(e) => handleFilterChange('checkOut', e.target.value)}
+              min={filters.checkIn || new Date().toISOString().split('T')[0]}
               className="pl-10"
             />
           </div>
@@ -266,17 +337,37 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Clear Filters Button */}
-      <div className="flex justify-end">
+      {/* Sort and Actions Row */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+        {/* Sort Options */}
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-medium text-gray-700">Sort by:</label>
+          <div className="relative">
+            <ApperIcon name="ArrowUpDown" className="absolute left-3 top-3 text-gray-400" size={16} />
+            <Select
+              value={filters.sortBy}
+              onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+              className="pl-10 w-48"
+            >
+              <option value="">Default</option>
+              <option value="price_low">Price: Low to High</option>
+              <option value="price_high">Price: High to Low</option>
+              <option value="rating">Guest Rating</option>
+              <option value="newest">Newest Listings</option>
+            </Select>
+          </div>
+        </div>
+
+        {/* Clear Filters Button */}
         <Button
           variant="outline"
           onClick={clearFilters}
           className="text-sm"
         >
           <ApperIcon name="X" size={16} className="mr-2" />
-          Clear Filters
+          Clear All
         </Button>
-      </div>
+</div>
     </div>
   )}
 
