@@ -445,14 +445,29 @@ const getTotalSteps = () => 5;
                 <p className="mt-2 text-sm text-red-600 font-body">{errors.images}</p>
               )}
 </div>
+
+            {/* Instant Booking Toggle */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <h4 className="text-base font-semibold font-display text-gray-900">
+                  Instant Book
+                </h4>
+                <p className="text-sm text-gray-600 font-body mt-1">
+                  Allow guests to book immediately without requiring approval
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.instantBook}
+                  onChange={(e) => setFormData(prev => ({ ...prev, instantBook: e.target.checked }))}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+              </label>
+            </div>
           </div>
         )}
-<input
-                          type="checkbox"
-                          checked={formData.instantBook}
-                          onChange={(e) => setFormData(prev => ({ ...prev, instantBook: e.target.checked }))}
-                          className="sr-only peer"
-
         {/* Step 4: Availability Management */}
         {currentStep === 4 && showAvailabilityTab && (
           <div className="space-y-6">
