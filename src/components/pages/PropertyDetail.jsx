@@ -781,17 +781,18 @@ useEffect(() => {
                 />
               ))}
             </div>
-          ) : (
+) : (
             <div className="text-center py-12">
               <ApperIcon name="MessageSquare" size={48} className="mx-auto text-gray-300 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Reviews Yet</h3>
               <p className="text-gray-600">Be the first to share your experience with this property!</p>
             </div>
-</div>
           )}
         </div>
+</div>
       </div>
     </div>
   );
+};
 
 export default PropertyDetail;
