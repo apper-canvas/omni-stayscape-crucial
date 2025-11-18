@@ -145,7 +145,7 @@ return format(new Date(dateString), "MMM dd, yyyy");
           </div>
 
           {/* Special Requests - Host View */}
-          {isHost && booking.specialRequests && (
+{isHost && booking.specialRequests && (
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
               <div className="text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <ApperIcon name="MessageSquare" className="h-4 w-4 mr-1" />
@@ -155,9 +155,7 @@ return format(new Date(dateString), "MMM dd, yyyy");
                 {booking.specialRequests}
               </div>
             </div>
-</div>
           )}
-
           {/* Action Buttons */}
           <div className="pt-4 border-t border-gray-100">
             <div className="flex flex-wrap gap-3">
