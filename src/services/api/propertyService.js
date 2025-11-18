@@ -1,4 +1,5 @@
 import propertiesData from "@/services/mockData/properties.json";
+
 class PropertyService {
   constructor() {
     this.properties = [...propertiesData];
@@ -32,7 +33,7 @@ async create(property) {
         
 // Convert File objects to URLs for mock storage
         const processedImages = property.images?.map(image => {
-          if (typeof File !== 'undefined' && image instanceof File) {
+          if (typeof window !== 'undefined' && typeof File !== 'undefined' && image instanceof File) {
             // In a real app, this would upload to a server and return a URL
             return `https://example.com/uploads/${image.name}`;
           }
@@ -57,7 +58,7 @@ async create(property) {
         if (index !== -1) {
 // Convert File objects to URLs for mock storage
           const processedImages = propertyData.images?.map(image => {
-            if (typeof File !== 'undefined' && image instanceof File) {
+            if (typeof window !== 'undefined' && typeof File !== 'undefined' && image instanceof File) {
               return `https://example.com/uploads/${image.name}`;
             }
             return image;
@@ -90,23 +91,75 @@ async create(property) {
     });
   }
 
-  async search(query) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        if (!query) {
-          resolve([...this.properties]);
-          return;
-        }
-        
-        const filteredProperties = this.properties.filter(property =>
-          property.title.toLowerCase().includes(query.toLowerCase()) ||
-          property.location.toLowerCase().includes(query.toLowerCase()) ||
-          property.description.toLowerCase().includes(query.toLowerCase())
+async search(query) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (!query) {
+        resolve([...this.properties]);
+        return;
+      }
+      
+      const filteredProperties = this.properties.filter(property =>
+        property.title.toLowerCase().includes(query.toLowerCase()) ||
+        property.location.toLowerCase().includes(query.toLowerCase()) ||
+        property.description.toLowerCase().includes(query.toLowerCase())
+      );
+      resolve(filteredProperties);
+    }, 300);
+  });
+}
+
+async filter(criteria) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      let filteredProperties = [...this.properties];
+      
+      // Filter by location
+      if (criteria.location) {
+        filteredProperties = filteredProperties.filter(property =>
+          property.location.toLowerCase().includes(criteria.location.toLowerCase()) ||
+          property.title.toLowerCase().includes(criteria.location.toLowerCase())
         );
-        resolve(filteredProperties);
-      }, 300);
-    });
-  }
+      }
+      
+      // Filter by guest capacity
+      if (criteria.guests) {
+        filteredProperties = filteredProperties.filter(property =>
+          property.maxGuests >= criteria.guests
+        );
+      }
+      
+      // Filter by price range
+      if (criteria.priceMin !== null) {
+        filteredProperties = filteredProperties.filter(property =>
+          property.pricePerNight >= criteria.priceMin
+        );
+      }
+      
+      if (criteria.priceMax !== null) {
+        filteredProperties = filteredProperties.filter(property =>
+          property.pricePerNight <= criteria.priceMax
+        );
+      }
+      
+      // Filter by property type
+      if (criteria.propertyType) {
+        filteredProperties = filteredProperties.filter(property =>
+          property.propertyType === criteria.propertyType
+        );
+      }
+      
+      // Filter by minimum bedrooms
+      if (criteria.minBedrooms !== null) {
+        filteredProperties = filteredProperties.filter(property =>
+          property.bedrooms >= criteria.minBedrooms
+        );
+      }
+      
+      resolve(filteredProperties);
+    }, 300);
+  });
+}
 }
 
 export const propertyService = new PropertyService();
