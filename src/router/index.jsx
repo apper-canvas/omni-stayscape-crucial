@@ -5,6 +5,7 @@ import Layout from "@/components/organisms/Layout";
 // Lazy load all page components
 const BrowseProperties = lazy(() => import("@/components/pages/BrowseProperties"));
 const MyListings = lazy(() => import("@/components/pages/MyListings"));
+const BookingRequests = lazy(() => import("@/components/pages/BookingRequests"));
 const MyBookings = lazy(() => import("@/components/pages/MyBookings"));
 const PropertyDetail = lazy(() => import("@/components/pages/PropertyDetail"));
 const NotFound = lazy(() => import("@/components/pages/NotFound"));
@@ -37,8 +38,12 @@ const mainRoutes = [
     element: <SuspenseLoader><MyListings /></SuspenseLoader>
   },
   {
-    path: "my-bookings", 
+path: "my-bookings", 
     element: <SuspenseLoader><MyBookings /></SuspenseLoader>
+  },
+  {
+    path: "booking-requests", 
+    element: <SuspenseLoader><BookingRequests /></SuspenseLoader>
   },
   {
     path: "property/:id",

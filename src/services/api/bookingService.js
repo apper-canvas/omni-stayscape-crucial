@@ -1,4 +1,5 @@
 import bookingsData from "@/services/mockData/bookings.json";
+import React from "react";
 
 class BookingService {
   constructor() {
@@ -42,13 +43,18 @@ class BookingService {
     });
   }
 
-  async update(id, bookingData) {
+async update(id, bookingData) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         const index = this.bookings.findIndex(b => b.Id === parseInt(id));
         if (index !== -1) {
-          this.bookings[index] = { ...this.bookings[index], ...bookingData };
-          resolve({ ...this.bookings[index] });
+          const updatedBooking = { 
+            ...this.bookings[index], 
+            ...bookingData,
+            updatedAt: new Date().toISOString()
+          };
+          this.bookings[index] = updatedBooking;
+          resolve({ ...updatedBooking });
         } else {
           reject(new Error("Booking not found"));
         }
@@ -70,11 +76,21 @@ class BookingService {
     });
   }
 
-  async getByPropertyId(propertyId) {
+async getByPropertyId(propertyId) {
     return new Promise((resolve) => {
       setTimeout(() => {
         const propertyBookings = this.bookings.filter(b => b.propertyId === propertyId.toString());
         resolve(propertyBookings);
+      }, 200);
+    });
+  }
+
+async getByHostProperties(propertyIds) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const propertyIdStrings = propertyIds.map(id => id.toString());
+        const hostBookings = this.bookings.filter(b => propertyIdStrings.includes(b.propertyId.toString()));
+        resolve(hostBookings);
       }, 200);
     });
   }

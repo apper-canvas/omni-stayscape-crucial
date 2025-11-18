@@ -198,15 +198,15 @@ const handleEditProperty = (property) => {
           <div className="text-2xl font-bold text-secondary-800 font-display">2,847</div>
         </button>
 
-        <button 
-          onClick={() => navigate('/my-bookings')}
+<button 
+          onClick={() => navigate('/booking-requests')}
           className="bg-gradient-to-br from-accent-50 to-accent-100 p-6 rounded-xl border border-accent-200 hover:from-accent-100 hover:to-accent-200 hover:border-accent-300 transition-all duration-200 hover:shadow-lg hover:scale-105 cursor-pointer text-left w-full"
         >
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 bg-accent-500 rounded-lg">
               <ApperIcon name="Calendar" className="h-5 w-5 text-white" />
             </div>
-            <span className="text-sm font-medium text-accent-600 font-body">Bookings</span>
+            <span className="text-sm font-medium text-accent-600 font-body">Booking Requests</span>
           </div>
           <div className="text-2xl font-bold text-accent-800 font-display">18</div>
         </button>

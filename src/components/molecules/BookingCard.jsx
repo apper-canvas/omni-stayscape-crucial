@@ -5,7 +5,7 @@ import ApperIcon from "@/components/ApperIcon";
 import Card from "@/components/atoms/Card";
 import Badge from "@/components/atoms/Badge";
 
-const BookingCard = ({ booking, property, className, onCancel }) => {
+const BookingCard = ({ booking, property, className, onCancel, isHost, onApprove, onDecline }) => {
   const getStatusVariant = (status) => {
     switch (status.toLowerCase()) {
       case "confirmed":
@@ -30,6 +30,7 @@ const BookingCard = ({ booking, property, className, onCancel }) => {
   };
 
   const canCancel = booking.status.toLowerCase() === "pending" || booking.status.toLowerCase() === "confirmed";
+  const isPending = booking.status.toLowerCase() === "pending";
 
   return (
     <Card className={cn("overflow-hidden", className)}>
@@ -75,6 +76,7 @@ const BookingCard = ({ booking, property, className, onCancel }) => {
             </div>
           </div>
 
+          {/* Guest Information - Enhanced for hosts */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 text-sm text-gray-600 font-body">
               <div className="flex items-center">
@@ -85,7 +87,14 @@ const BookingCard = ({ booking, property, className, onCancel }) => {
                 <ApperIcon name="Users" className="h-4 w-4 mr-1" />
                 {booking.guests} guests
               </div>
+              {isHost && booking.guestEmail && (
+                <div className="flex items-center">
+                  <ApperIcon name="Mail" className="h-4 w-4 mr-1" />
+                  {booking.guestEmail}
+                </div>
+              )}
             </div>
+            
             <div className="flex items-center space-x-3">
               <div className="text-right">
                 <div className="text-xl font-bold font-display gradient-text">
@@ -93,7 +102,31 @@ const BookingCard = ({ booking, property, className, onCancel }) => {
                 </div>
                 <div className="text-sm text-gray-600 font-body">total</div>
               </div>
-              {canCancel && onCancel && (
+
+              {/* Host Actions */}
+              {isHost && isPending && onApprove && onDecline && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => onApprove(booking.Id)}
+                    className="flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                    title="Approve booking"
+                  >
+                    <ApperIcon name="Check" className="h-4 w-4 mr-1" />
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => onDecline(booking.Id)}
+                    className="flex items-center px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+                    title="Decline booking"
+                  >
+                    <ApperIcon name="X" className="h-4 w-4 mr-1" />
+                    Decline
+                  </button>
+                </div>
+              )}
+
+              {/* Guest Actions */}
+              {!isHost && canCancel && onCancel && (
                 <button
                   onClick={() => onCancel(booking.Id)}
                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -104,6 +137,19 @@ const BookingCard = ({ booking, property, className, onCancel }) => {
               )}
             </div>
           </div>
+
+          {/* Special Requests - Host View */}
+          {isHost && booking.specialRequests && (
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <div className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+                <ApperIcon name="MessageSquare" className="h-4 w-4 mr-1" />
+                Special Requests
+              </div>
+              <div className="text-sm text-gray-600 font-body">
+                {booking.specialRequests}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Card>
