@@ -235,17 +235,16 @@ const handleSubmit = async (e) => {
           {property ? 'Edit Property' : 'Add New Property'}
         </h2>
         
-        {/* Step Title */}
+{/* Step Title */}
         <div className="text-center mb-6">
           <h3 className="text-lg font-semibold text-gray-900 font-display">
             {getStepTitle(currentStep - 1)}
           </h3>
         </div>
-        </div>
         
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-          <div 
+          <div
             className="bg-primary-500 h-2 rounded-full transition-all duration-300"
             style={{ width: `${(currentStep / totalSteps) * 100}%` }}
           ></div>
