@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { propertyService } from "@/services/api/propertyService";
-import AvailabilityCalendar from "@/components/molecules/AvailabilityCalendar";
 import { cn } from "@/utils/cn";
+import { propertyService } from "@/services/api/propertyService";
 import ApperIcon from "@/components/ApperIcon";
+import AvailabilityCalendar from "@/components/molecules/AvailabilityCalendar";
 import FileDropzone from "@/components/atoms/FileDropzone";
 import Select from "@/components/atoms/Select";
 import Button from "@/components/atoms/Button";
@@ -523,10 +523,9 @@ const handleSubmit = async (e) => {
             )}
           </div>
         </div>
-      </form>
+</form>
     </div>
   );
-    </div>
 };
 
 export default PropertyForm;

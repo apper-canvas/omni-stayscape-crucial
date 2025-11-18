@@ -1,5 +1,4 @@
 import propertiesData from "@/services/mockData/properties.json";
-
 // Mock availability storage - in production, this would be stored in database
 let propertyAvailability = {};
 
@@ -136,8 +135,7 @@ async delete(id) {
         resolve(monthlyAvailability);
       }, 300);
     });
-  },
-
+}
   // Update availability for specific date
   async updateAvailability(propertyId, dateKey, status) {
     return new Promise((resolve, reject) => {
@@ -157,10 +155,10 @@ async delete(id) {
           resolve({ success: true });
         } catch (error) {
           reject(error);
-        }
+}
       }, 200);
     });
-  },
+  }
 
   // Check if a date is available for booking
   async isDateAvailable(propertyId, dateKey) {
@@ -172,9 +170,9 @@ async delete(id) {
 
         const status = propertyAvailability[propertyId][dateKey];
         resolve(status === 'available');
-      }, 100);
+}, 100);
     });
-  },
+  }
 
   // Check if a date range is available
   async isDateRangeAvailable(propertyId, startDate, endDate) {
@@ -201,9 +199,9 @@ async delete(id) {
         }
 
         resolve(true);
-      }, 200);
+}, 200);
     });
-  },
+  }
 
   // Mark dates as booked (called when booking is confirmed)
   async markDatesAsBooked(propertyId, startDate, endDate) {
@@ -228,9 +226,9 @@ async delete(id) {
         } catch (error) {
           reject(error);
         }
-      }, 200);
+}, 200);
     });
-}
+  }
 
   async search(query) {
     return new Promise((resolve) => {
