@@ -178,18 +178,48 @@ const PropertyCard = ({ property, className, onEdit, onDelete, showActions = fal
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex flex-wrap gap-1">
-            {property.amenities.slice(0, 3).map((amenity, index) => (
-              <Badge key={index} variant="neutral" size="xs">
-                {amenity}
-              </Badge>
-            ))}
-            {property.amenities.length > 3 && (
-              <Badge variant="neutral" size="xs">
-                +{property.amenities.length - 3} more
-              </Badge>
-            )}
+<div className="flex items-center justify-between">
+          <div className="flex-1 mr-4">
+            {/* Top amenities with icons */}
+            <div className="flex flex-wrap gap-2 mb-2">
+              {property.amenities.slice(0, 4).map((amenity, index) => {
+                const getAmenityIcon = (amenityName) => {
+                  const iconMap = {
+                    'WiFi': 'Wifi',
+                    'Kitchen': 'ChefHat', 
+                    'Pool': 'Waves',
+                    'Gym': 'Dumbbell',
+                    'Air Conditioning': 'Wind',
+                    'Parking': 'Car',
+                    'Balcony': 'Building',
+                    'Garden': 'Trees',
+                    'Spa': 'Sparkles',
+                    'Beachfront': 'Waves',
+                    'Pet Friendly': 'Heart',
+                    'Fireplace': 'Flame',
+                    'Mountain View': 'Mountain',
+                    'City Center': 'Building2',
+                    'Wheelchair Accessible': 'Accessibility'
+                  };
+                  return iconMap[amenityName] || 'Check';
+                };
+                
+                return (
+                  <div key={index} className="flex items-center gap-1 bg-primary-50 px-2 py-1 rounded-full">
+                    <ApperIcon name={getAmenityIcon(amenity)} size={12} className="text-primary-600" />
+                    <span className="text-xs font-medium text-primary-700">{amenity}</span>
+                  </div>
+                );
+              })}
+              {property.amenities.length > 4 && (
+                <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-full">
+                  <ApperIcon name="Plus" size={12} className="text-gray-600" />
+                  <span className="text-xs font-medium text-gray-700">
+                    {property.amenities.length - 4} more
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold font-display gradient-text">

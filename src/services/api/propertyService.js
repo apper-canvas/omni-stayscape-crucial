@@ -1,5 +1,6 @@
 import propertiesData from "@/services/mockData/properties.json";
 import { reviewService } from "@/services/api/reviewService";
+import React from "react";
 // Mock availability storage - in production, this would be stored in database
 let propertyAvailability = {};
 
@@ -374,11 +375,24 @@ async filter(criteria) {
           );
         }
         
-        // Filter by minimum bedrooms
+// Filter by minimum bedrooms
         if (criteria.minBedrooms !== null) {
           filteredProperties = filteredProperties.filter(property =>
             property.bedrooms >= criteria.minBedrooms
           );
+        }
+        
+        // Filter by selected amenities
+        if (criteria.selectedAmenities && criteria.selectedAmenities.length > 0) {
+          filteredProperties = filteredProperties.filter(property => {
+            // Check if property has all selected amenities
+            return criteria.selectedAmenities.every(selectedAmenity =>
+              property.amenities.some(propertyAmenity =>
+                propertyAmenity.toLowerCase().includes(selectedAmenity.toLowerCase()) ||
+                selectedAmenity.toLowerCase().includes(propertyAmenity.toLowerCase())
+              )
+            );
+          });
         }
         
         // Filter by availability (check-in and check-out dates)

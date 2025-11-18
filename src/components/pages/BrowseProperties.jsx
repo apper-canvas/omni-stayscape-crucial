@@ -1,9 +1,9 @@
+import "leaflet/dist/leaflet.css";
 import React, { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { toast } from "react-toastify";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { divIcon } from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { propertyService } from "@/services/api/propertyService";
 import ApperIcon from "@/components/ApperIcon";
 import Loading from "@/components/ui/Loading";
@@ -33,8 +33,61 @@ const [filters, setFilters] = useState({
   minBedrooms: "",
   checkIn: "",
   checkOut: "",
-  sortBy: ""
+  sortBy: "",
+  selectedAmenities: []
 });
+
+// Amenities data structure with categories
+const amenitiesData = {
+  essential: {
+    title: "Essential",
+    icon: "Home",
+    amenities: [
+      { name: "WiFi", icon: "Wifi" },
+      { name: "Kitchen", icon: "ChefHat" },
+      { name: "Air Conditioning", icon: "Wind" },
+      { name: "Heating", icon: "Flame" },
+      { name: "Hot Water", icon: "Droplets" },
+      { name: "Washer", icon: "WashingMachine" }
+    ]
+  },
+  features: {
+    title: "Features",
+    icon: "Star",
+    amenities: [
+      { name: "Pool", icon: "Waves" },
+      { name: "Gym", icon: "Dumbbell" },
+      { name: "Spa", icon: "Sparkles" },
+      { name: "Balcony", icon: "Building" },
+      { name: "Garden", icon: "Trees" },
+      { name: "Fireplace", icon: "Flame" }
+    ]
+  },
+  location: {
+    title: "Location",
+    icon: "MapPin",
+    amenities: [
+      { name: "Beachfront", icon: "Waves" },
+      { name: "City Center", icon: "Building2" },
+      { name: "Mountain View", icon: "Mountain" },
+      { name: "Lake Access", icon: "Lake" },
+      { name: "Ski Access", icon: "Snowflake" },
+      { name: "Pet Friendly", icon: "Heart" }
+    ]
+  },
+  accessibility: {
+    title: "Accessibility",
+    icon: "Accessibility",
+    amenities: [
+      { name: "Wheelchair Accessible", icon: "Accessibility" },
+      { name: "Step-Free Access", icon: "ArrowRight" },
+      { name: "Wide Doorways", icon: "DoorOpen" },
+      { name: "Accessible Bathroom", icon: "Bath" }
+    ]
+  }
+};
+
+const [expandedCategories, setExpandedCategories] = useState({});
 
 const loadProperties = async () => {
   setLoading(true);
@@ -42,11 +95,11 @@ const loadProperties = async () => {
   
   try {
     const data = await propertyService.getAll();
-    setProperties(data);
-    setFilteredProperties(data);
+    setProperties(data || []);
+    setFilteredProperties(data || []);
     
     // Set map center to first property location if available
-    if (data.length > 0 && data[0].location?.coordinates) {
+    if (data && data.length > 0 && data[0].location?.coordinates) {
       setMapCenter([data[0].location.coordinates.lat, data[0].location.coordinates.lng]);
     }
   } catch (err) {
@@ -55,6 +108,22 @@ const loadProperties = async () => {
   } finally {
     setLoading(false);
   }
+};
+
+const handleFilterChange = (key, value) => {
+  setFilters(prev => ({
+    ...prev,
+    [key]: value
+  }));
+};
+
+const handleAmenityToggle = (amenityName) => {
+  setFilters(prev => ({
+    ...prev,
+    selectedAmenities: prev.selectedAmenities.includes(amenityName)
+      ? prev.selectedAmenities.filter(a => a !== amenityName)
+      : [...prev.selectedAmenities, amenityName]
+  }));
 };
 
 const handleSearch = async (query) => {
@@ -73,7 +142,7 @@ const handleSearch = async (query) => {
 
 const applyFilters = async () => {
   try {
-    const results = await propertyService.filter({
+const results = await propertyService.filter({
       location: filters.location,
       guests: filters.guests ? parseInt(filters.guests) : null,
       priceMin: filters.priceMin ? parseFloat(filters.priceMin) : null,
@@ -82,7 +151,8 @@ const applyFilters = async () => {
       minBedrooms: filters.minBedrooms ? parseInt(filters.minBedrooms) : null,
       checkIn: filters.checkIn || null,
       checkOut: filters.checkOut || null,
-      sortBy: filters.sortBy || null
+      sortBy: filters.sortBy || null,
+      selectedAmenities: filters.selectedAmenities
     });
     setFilteredProperties(results);
   } catch (err) {
@@ -126,13 +196,6 @@ const createPropertyIcon = (price) => {
   });
 };
 
-const handleFilterChange = (key, value) => {
-  setFilters(prev => ({
-    ...prev,
-    [key]: value
-  }));
-};
-
 const clearFilters = () => {
   setFilters({
     location: "",
@@ -143,7 +206,8 @@ const clearFilters = () => {
     minBedrooms: "",
     checkIn: "",
     checkOut: "",
-    sortBy: ""
+    sortBy: "",
+    selectedAmenities: []
   });
 };
 
@@ -158,10 +222,6 @@ useEffect(() => {
     applyFilters();
   }
 }, [searchQuery, properties, filters]);
-
-useEffect(() => {
-  loadProperties();
-}, []);
 
   if (loading) {
     return <Loading variant="grid" />;
@@ -191,7 +251,7 @@ if (filteredProperties.length === 0 && properties.length === 0) {
 
 if (filteredProperties.length === 0 && (searchQuery || Object.values(filters).some(f => f))) {
     const hasDateFilter = filters.checkIn || filters.checkOut;
-    const hasOtherFilters = filters.location || filters.guests || filters.priceMin || filters.priceMax || filters.propertyType || filters.minBedrooms;
+const hasOtherFilters = filters.location || filters.guests || filters.priceMin || filters.priceMax || filters.propertyType || filters.minBedrooms || filters.selectedAmenities.length > 0;
     
     let title = "No properties found";
     let message = "We couldn't find any properties matching your criteria.";
@@ -439,6 +499,66 @@ return (
           <ApperIcon name="X" size={16} className="mr-2" />
           Clear All
         </Button>
+</div>
+
+      {/* Amenities Filter Section */}
+      <div className="border-t pt-6">
+        <div className="flex items-center gap-3 mb-4">
+          <ApperIcon name="Filter" className="text-gray-700" size={20} />
+          <h3 className="text-lg font-semibold text-gray-900 font-display">Filter by Amenities</h3>
+          {filters.selectedAmenities.length > 0 && (
+            <span className="text-sm text-primary-600 font-medium">
+              ({filters.selectedAmenities.length} selected)
+            </span>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Object.entries(amenitiesData).map(([categoryKey, category]) => (
+            <div key={categoryKey} className="border border-gray-200 rounded-lg">
+              <button
+                onClick={() => setExpandedCategories(prev => ({
+                  ...prev,
+                  [categoryKey]: !prev[categoryKey]
+                }))}
+                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <ApperIcon name={category.icon} className="text-primary-600" size={20} />
+                  <span className="font-medium text-gray-900">{category.title}</span>
+                </div>
+                <ApperIcon 
+                  name={expandedCategories[categoryKey] ? "ChevronUp" : "ChevronDown"} 
+                  className="text-gray-500" 
+                  size={16} 
+                />
+              </button>
+              
+              {expandedCategories[categoryKey] && (
+                <div className="px-4 pb-4 border-t border-gray-100">
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    {category.amenities.map((amenity) => (
+                      <label
+                        key={amenity.name}
+                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={filters.selectedAmenities.includes(amenity.name)}
+                          onChange={() => handleAmenityToggle(amenity.name)}
+                          className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        />
+                        <ApperIcon name={amenity.icon} className="text-gray-600" size={16} />
+                        <span className="text-sm text-gray-700 font-body">{amenity.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
 </div>
     </div>
   )}
