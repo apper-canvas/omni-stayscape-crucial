@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { propertyService } from "@/services/api/propertyService";
 import ApperIcon from "@/components/ApperIcon";
@@ -11,6 +12,7 @@ import PropertyForm from "@/components/organisms/PropertyForm";
 import Button from "@/components/atoms/Button";
 
 const MyListings = () => {
+  const navigate = useNavigate();
 const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
