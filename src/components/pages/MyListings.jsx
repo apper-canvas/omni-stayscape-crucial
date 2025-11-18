@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import AvailabilityCalendar from "@/components/molecules/AvailabilityCalendar";
 import { toast } from "react-toastify";
 import { propertyService } from "@/services/api/propertyService";
 import ApperIcon from "@/components/ApperIcon";
+import AvailabilityCalendar from "@/components/molecules/AvailabilityCalendar";
 import Loading from "@/components/ui/Loading";
 import Empty from "@/components/ui/Empty";
 import ErrorView from "@/components/ui/ErrorView";
@@ -167,8 +167,11 @@ const handleEditProperty = (property) => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-gradient-to-br from-primary-50 to-primary-100 p-6 rounded-xl border border-primary-200">
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <button 
+          onClick={() => navigate('/my-listings')}
+          className="bg-gradient-to-br from-primary-50 to-primary-100 p-6 rounded-xl border border-primary-200 hover:from-primary-100 hover:to-primary-200 hover:border-primary-300 transition-all duration-200 hover:shadow-lg hover:scale-105 cursor-pointer text-left w-full"
+        >
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 bg-primary-500 rounded-lg">
               <ApperIcon name="Building" className="h-5 w-5 text-white" />
@@ -176,9 +179,14 @@ const handleEditProperty = (property) => {
             <span className="text-sm font-medium text-primary-600 font-body">Total Listings</span>
           </div>
           <div className="text-2xl font-bold text-primary-800 font-display">{properties.length}</div>
-        </div>
+        </button>
 
-        <div className="bg-gradient-to-br from-secondary-50 to-secondary-100 p-6 rounded-xl border border-secondary-200">
+        <button 
+          onClick={() => {
+            toast.info('Analytics feature coming soon! Track your property views and engagement.');
+          }}
+          className="bg-gradient-to-br from-secondary-50 to-secondary-100 p-6 rounded-xl border border-secondary-200 hover:from-secondary-100 hover:to-secondary-200 hover:border-secondary-300 transition-all duration-200 hover:shadow-lg hover:scale-105 cursor-pointer text-left w-full"
+        >
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 bg-secondary-500 rounded-lg">
               <ApperIcon name="Eye" className="h-5 w-5 text-white" />
@@ -186,9 +194,12 @@ const handleEditProperty = (property) => {
             <span className="text-sm font-medium text-secondary-600 font-body">Total Views</span>
           </div>
           <div className="text-2xl font-bold text-secondary-800 font-display">2,847</div>
-        </div>
+        </button>
 
-        <div className="bg-gradient-to-br from-accent-50 to-accent-100 p-6 rounded-xl border border-accent-200">
+        <button 
+          onClick={() => navigate('/my-bookings')}
+          className="bg-gradient-to-br from-accent-50 to-accent-100 p-6 rounded-xl border border-accent-200 hover:from-accent-100 hover:to-accent-200 hover:border-accent-300 transition-all duration-200 hover:shadow-lg hover:scale-105 cursor-pointer text-left w-full"
+        >
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 bg-accent-500 rounded-lg">
               <ApperIcon name="Calendar" className="h-5 w-5 text-white" />
@@ -196,9 +207,14 @@ const handleEditProperty = (property) => {
             <span className="text-sm font-medium text-accent-600 font-body">Bookings</span>
           </div>
           <div className="text-2xl font-bold text-accent-800 font-display">18</div>
-        </div>
+        </button>
 
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
+        <button 
+          onClick={() => {
+            toast.info('Earnings dashboard coming soon! View detailed financial reports and payment history.');
+          }}
+          className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 hover:from-green-100 hover:to-green-200 hover:border-green-300 transition-all duration-200 hover:shadow-lg hover:scale-105 cursor-pointer text-left w-full"
+        >
           <div className="flex items-center justify-between mb-2">
             <div className="p-2 bg-green-500 rounded-lg">
               <ApperIcon name="DollarSign" className="h-5 w-5 text-white" />
@@ -206,11 +222,11 @@ const handleEditProperty = (property) => {
             <span className="text-sm font-medium text-green-600 font-body">Earnings</span>
           </div>
           <div className="text-2xl font-bold text-green-800 font-display">$8,945</div>
-        </div>
+</button>
       </div>
 
       {/* Property Grid */}
-<PropertyGrid
+      <PropertyGrid
         properties={properties}
         showActions={true}
         onEditProperty={handleEditProperty}
