@@ -10,7 +10,7 @@ const MyBookings = lazy(() => import("@/components/pages/MyBookings"));
 const PropertyDetail = lazy(() => import("@/components/pages/PropertyDetail"));
 const NotFound = lazy(() => import("@/components/pages/NotFound"));
 const Messages = lazy(() => import("@/components/pages/Messages"));
-
+const GuestProfile = lazy(() => import("@/components/pages/GuestProfile"));
 // Loading component for suspense
 const SuspenseLoader = ({ children }) => (
   <Suspense fallback={
@@ -52,6 +52,10 @@ const mainRoutes = [
   {
     path: "property/:id",
     element: <SuspenseLoader><PropertyDetail /></SuspenseLoader>
+  },
+  {
+    path: "guest-profile/:guestName",
+    element: <SuspenseLoader><GuestProfile /></SuspenseLoader>
   },
   {
     path: "*",

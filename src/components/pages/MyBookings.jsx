@@ -189,11 +189,12 @@ const MyBookings = () => {
       ) : (
         <div className="space-y-4">
           {filteredBookings.map((booking) => (
-            <BookingCard
+<BookingCard
               key={booking.Id}
               booking={booking}
               property={getPropertyById(booking.propertyId)}
               onCancel={handleCancelBooking}
+              showGuestReview={false} // Guests can't review other guests
             />
           ))}
         </div>

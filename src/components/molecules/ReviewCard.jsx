@@ -1,10 +1,12 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { cn } from "@/utils/cn";
+import ApperIcon from "@/components/ApperIcon";
 import StarRating from "@/components/molecules/StarRating";
 import Button from "@/components/atoms/Button";
-import ApperIcon from "@/components/ApperIcon";
-import { cn } from "@/utils/cn";
 
-const ReviewCard = ({ review, onMarkHelpful, className = "" }) => {
+const ReviewCard = ({ review, onMarkHelpful, className = "", reviewType = "property" }) => {
+  const navigate = useNavigate();
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -22,14 +24,26 @@ const ReviewCard = ({ review, onMarkHelpful, className = "" }) => {
 
   return (
     <div className={cn("bg-white rounded-lg border border-gray-200 p-6 space-y-4", className)}>
-      {/* Header with guest info and overall rating */}
+{/* Header with guest/host info and overall rating */}
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center text-white font-semibold">
-            {review.guestName.charAt(0)}
+            {reviewType === "guest" 
+              ? (review.hostName || "Host").charAt(0)
+              : (review.guestName || "Guest").charAt(0)
+            }
           </div>
           <div>
-            <h4 className="font-semibold text-gray-900">{review.guestName}</h4>
+            {reviewType === "guest" ? (
+              <h4 className="font-semibold text-gray-900">{review.hostName || "Host"}</h4>
+            ) : (
+              <button
+                onClick={() => navigate(`/guest-profile/${encodeURIComponent(review.guestName)}`)}
+                className="font-semibold text-gray-900 hover:text-primary-600 transition-colors"
+              >
+                {review.guestName}
+              </button>
+            )}
             <p className="text-sm text-gray-500">{formatDate(review.createdAt)}</p>
           </div>
         </div>

@@ -4,29 +4,53 @@ import Button from "@/components/atoms/Button";
 import TextArea from "@/components/atoms/TextArea";
 import { cn } from "@/utils/cn";
 
-const ReviewForm = ({ onSubmit, loading = false, className = "" }) => {
-  const [formData, setFormData] = useState({
-    overallRating: 0,
-    categoryRatings: {
+const ReviewForm = ({ onSubmit, loading = false, className = "", reviewType = "property", guestName = "" }) => {
+  const getInitialCategoryRatings = () => {
+    if (reviewType === "guest") {
+      return {
+        cleanliness: 0,
+        communication: 0,
+        respectfulness: 0,
+        reliability: 0
+      };
+    }
+    return {
       cleanliness: 0,
       accuracy: 0,
       communication: 0,
       location: 0,
       value: 0
-    },
-    reviewText: "",
-    guestName: "John Doe" // In real app, this would come from auth
-  });
+    };
+  };
 
+  const [formData, setFormData] = useState({
+    overallRating: 0,
+    categoryRatings: getInitialCategoryRatings(),
+    reviewText: "",
+    guestName: reviewType === "guest" ? guestName : "John Doe", // Host reviewing guest
+    hostName: reviewType === "guest" ? "Jane Smith" : undefined // In real app, this would come from auth
+  });
   const [errors, setErrors] = useState({});
 
-  const categoryLabels = {
-    cleanliness: "Cleanliness",
-    accuracy: "Accuracy",
-    communication: "Communication", 
-    location: "Location",
-    value: "Value"
+const getCategoryLabels = () => {
+    if (reviewType === "guest") {
+      return {
+        cleanliness: "Cleanliness",
+        communication: "Communication",
+        respectfulness: "Respectfulness",
+        reliability: "Reliability"
+      };
+    }
+    return {
+      cleanliness: "Cleanliness",
+      accuracy: "Accuracy",
+      communication: "Communication", 
+      location: "Location",
+      value: "Value"
+    };
   };
+
+  const categoryLabels = getCategoryLabels();
 
   const handleOverallRatingChange = (rating) => {
     setFormData(prev => ({ ...prev, overallRating: rating }));
@@ -77,7 +101,19 @@ const ReviewForm = ({ onSubmit, loading = false, className = "" }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className={cn("space-y-6", className)}>
+<form onSubmit={handleSubmit} className={cn("space-y-6", className)}>
+      {/* Header */}
+      {reviewType === "guest" && (
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h3 className="font-medium text-blue-900 mb-1">
+            Review Guest: {guestName}
+          </h3>
+          <p className="text-sm text-blue-700">
+            Share your experience hosting this guest to help other hosts make informed decisions.
+          </p>
+        </div>
+      )}
+
       {/* Overall Rating */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -118,12 +154,15 @@ const ReviewForm = ({ onSubmit, loading = false, className = "" }) => {
       {/* Review Text */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Write Your Review *
+          {reviewType === "guest" ? "Write Your Guest Review *" : "Write Your Review *"}
         </label>
         <TextArea
           value={formData.reviewText}
           onChange={handleTextChange}
-          placeholder="Share your experience with this property..."
+          placeholder={reviewType === "guest" 
+            ? "Share your experience hosting this guest..."
+            : "Share your experience with this property..."
+          }
           rows={4}
           className={cn(
             "w-full",

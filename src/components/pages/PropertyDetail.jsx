@@ -15,9 +15,9 @@ import Button from "@/components/atoms/Button";
 import Badge from "@/components/atoms/Badge";
 
 const PropertyDetail = () => {
-  const { id } = useParams();
+const { id } = useParams();
   const navigate = useNavigate();
-const [property, setProperty] = useState(null);
+  const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -35,8 +35,11 @@ const [property, setProperty] = useState(null);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewSubmitLoading, setReviewSubmitLoading] = useState(false);
-const [canWriteReview, setCanWriteReview] = useState(false);
-  
+  const [canWriteReview, setCanWriteReview] = useState(false);
+
+  const handleGuestNameClick = (guestName) => {
+    navigate(`/guest-profile/${encodeURIComponent(guestName)}`);
+  };
   const loadProperty = async () => {
     setLoading(true);
     setError("");
@@ -538,7 +541,7 @@ useEffect(() => {
       </div>
 
       {/* Reviews Section */}
-      <div className="space-y-8">
+<div className="space-y-8">
         <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold font-display text-gray-900">

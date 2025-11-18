@@ -1,9 +1,10 @@
 import reviewsData from "@/services/mockData/reviews.json";
-
 class ReviewService {
-  constructor() {
+constructor() {
     this.reviews = [...reviewsData];
+    this.guestReviews = []; // Store guest reviews separately
     this.nextId = Math.max(...this.reviews.map(r => r.Id)) + 1;
+    this.nextGuestReviewId = 1;
   }
 
   async getAll() {
@@ -36,13 +37,23 @@ class ReviewService {
     });
   }
 
-  async getByGuestId(guestId) {
+async getByGuestId(guestId) {
     return new Promise((resolve) => {
       setTimeout(() => {
         const guestReviews = this.reviews.filter(r => r.guestId === guestId);
         resolve(guestReviews);
       }, 200);
     });
+  }
+
+  // Guest review methods
+  async getByGuestName(guestName) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const reviews = this.guestReviews.filter(r => r.guestName === guestName);
+        resolve(reviews);
+      }, 200);
+});
   }
 
   async create(reviewData) {
@@ -56,6 +67,21 @@ class ReviewService {
         };
         this.reviews.push(newReview);
         resolve({ ...newReview });
+      }, 300);
+    });
+  }
+
+  async createGuestReview(reviewData) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const newGuestReview = {
+          ...reviewData,
+          Id: this.nextGuestReviewId++,
+          createdAt: new Date().toISOString(),
+          helpfulCount: 0
+        };
+        this.guestReviews.push(newGuestReview);
+        resolve({ ...newGuestReview });
       }, 300);
     });
   }
@@ -105,9 +131,9 @@ class ReviewService {
         }
       }, 150);
     });
-  }
+}
 
-  getAverageRating(propertyId) {
+async getAverageRating(propertyId) {
     const propertyReviews = this.reviews.filter(r => r.propertyId === parseInt(propertyId));
     if (propertyReviews.length === 0) return { overall: 0, categories: {}, reviewCount: 0 };
 
@@ -136,6 +162,37 @@ class ReviewService {
       overall: Math.round(overallAverage * 10) / 10,
       categories,
       reviewCount: propertyReviews.length
+    };
+  }
+
+  getGuestAverageRating(guestName) {
+    const guestReviews = this.guestReviews.filter(r => r.guestName === guestName);
+    if (guestReviews.length === 0) return { overall: 0, categories: {}, reviewCount: 0 };
+
+    const overallRatings = guestReviews.map(r => r.overallRating);
+    const overallAverage = overallRatings.reduce((sum, rating) => sum + rating, 0) / overallRatings.length;
+
+    const categories = {
+      cleanliness: 0,
+      communication: 0,
+      respectfulness: 0,
+      reliability: 0
+    };
+
+    Object.keys(categories).forEach(category => {
+      const categoryRatings = guestReviews
+        .map(r => r.categoryRatings && r.categoryRatings[category])
+        .filter(rating => rating !== undefined);
+      
+      if (categoryRatings.length > 0) {
+        categories[category] = categoryRatings.reduce((sum, rating) => sum + rating, 0) / categoryRatings.length;
+      }
+    });
+
+    return {
+      overall: Math.round(overallAverage * 10) / 10,
+      categories,
+      reviewCount: guestReviews.length
     };
   }
 }

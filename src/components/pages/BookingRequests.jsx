@@ -240,7 +240,7 @@ if (!bookings || bookings.length === 0) {
         />
       ) : (
         <div className="space-y-4">
-          {filteredBookings.map((booking) => (
+{filteredBookings.map((booking) => (
             <BookingCard
               key={booking.Id}
               booking={booking}
@@ -248,6 +248,7 @@ if (!bookings || bookings.length === 0) {
               isHost={true}
               onApprove={handleApproveBooking}
               onDecline={handleDeclineBooking}
+              showGuestReview={true} // Hosts can review guests after completion
             />
           ))}
         </div>
