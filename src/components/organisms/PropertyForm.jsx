@@ -23,8 +23,17 @@ const [formData, setFormData] = useState({
     propertyType: "",
     amenities: [],
     images: [],
-    instantBook: false
-   });
+    instantBook: false,
+    houseRules: {
+      checkInTime: "3:00 PM",
+      checkOutTime: "11:00 AM",
+      smokingAllowed: false,
+      petsAllowed: false,
+      partiesAllowed: false,
+      quietHours: "10:00 PM - 8:00 AM",
+      additionalRules: ""
+    }
+  });
    const [showAvailabilityTab, setShowAvailabilityTab] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -40,12 +49,13 @@ const propertyTypes = [
     "Entire home", "Private room", "Shared room"
   ];
 
-  const totalSteps = 3;
+const totalSteps = 4;
 
   const stepTitles = {
     1: "Basic Information",
     2: "Property Details", 
-    3: "Pricing & Images"
+    3: "Pricing & Images",
+    4: "House Rules"
   };
 
 useEffect(() => {
@@ -61,7 +71,16 @@ setFormData({
         propertyType: property.propertyType || "",
         amenities: property.amenities || [],
         images: [],
-        instantBook: property.instantBook || false
+        instantBook: property.instantBook || false,
+        houseRules: property.houseRules || {
+          checkInTime: "3:00 PM",
+          checkOutTime: "11:00 AM",
+          smokingAllowed: false,
+          petsAllowed: false,
+          partiesAllowed: false,
+          quietHours: "10:00 PM - 8:00 AM",
+          additionalRules: ""
+        }
       });
       setShowAvailabilityTab(true); // Show availability tab for existing properties
       // If editing, skip to final step
@@ -145,7 +164,10 @@ const validateForm = () => {
     if (!formData.maxGuests || parseInt(formData.maxGuests) < 1) newErrors.maxGuests = "Maximum guests must be at least 1";
     if (!formData.pricePerNight || parseInt(formData.pricePerNight) < 1) newErrors.pricePerNight = "Price per night must be at least $1";
     if (formData.images.length === 0) newErrors.images = "At least one image is required";
-
+    
+    // House rules validation
+    if (!formData.houseRules.checkInTime.trim()) newErrors.checkInTime = "Check-in time is required";
+    if (!formData.houseRules.checkOutTime.trim()) newErrors.checkOutTime = "Check-out time is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -168,6 +190,7 @@ const propertyData = {
         bathrooms: parseInt(formData.bathrooms),
         images: formData.images,
         instantBook: formData.instantBook,
+        houseRules: formData.houseRules,
         hostId: "host-1" // Default host ID
       };
 
@@ -185,7 +208,7 @@ const propertyData = {
         onSave(result);
         if (!property) {
           // For new properties, keep form open to manage availability
-          setCurrentStep(4); // Switch to availability tab
+setCurrentStep(5); // Switch to availability tab
         }
       }
     } catch (error) {
@@ -208,7 +231,7 @@ const propertyData = {
     }
   };
 
-  const canProceedToNextStep = () => {
+const canProceedToNextStep = () => {
     switch (currentStep) {
       case 1:
         return formData.title.trim() && formData.location.trim() && formData.description.trim();
@@ -217,6 +240,8 @@ const propertyData = {
       case 3:
         return formData.pricePerNight && formData.pricePerNight > 0 && formData.images.length > 0;
       case 4:
+        return formData.houseRules.checkInTime.trim() && formData.houseRules.checkOutTime.trim();
+      case 5:
         return true; // Availability tab is always valid
       default:
         return false;
@@ -224,10 +249,10 @@ const propertyData = {
   };
 
   const getStepTitle = (step) => {
-const titles = ["Basic Info", "Details", "Amenities", "Photos & Pricing", "Booking Settings"];
+const titles = ["Basic Info", "Details", "Amenities", "Photos & Pricing", "House Rules", "Booking Settings"];
     return titles[step] || "Unknown Step";
   };
-const getTotalSteps = () => 5;
+  const getTotalSteps = () => 6;
   return (
     <div className={cn("max-w-4xl mx-auto", className)}>
       {/* Step Navigation */}
@@ -253,7 +278,7 @@ const getTotalSteps = () => 5;
         
 {/* Step Indicators */}
         <div className="flex justify-between">
-          {Array.from({ length: showAvailabilityTab ? 4 : totalSteps }, (_, index) => (
+{Array.from({ length: showAvailabilityTab ? 5 : totalSteps }, (_, index) => (
             <div key={index + 1} className="flex items-center">
               <div className={`
                 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
@@ -266,7 +291,7 @@ const getTotalSteps = () => 5;
               `}>
                 {currentStep > index + 1 ? '✓' : index + 1}
               </div>
-              {index < (showAvailabilityTab ? 4 : totalSteps) - 1 && (
+              {index < (showAvailabilityTab ? 5 : totalSteps) - 1 && (
                 <div className={`w-12 h-1 ml-2 ${
                   currentStep > index + 1 ? 'bg-primary-500' : 'bg-gray-200'
                 }`}></div>
@@ -404,6 +429,150 @@ const getTotalSteps = () => 5;
               </div>
             </div>
           </div>
+)}
+        
+        {/* Step 4: House Rules */}
+        {currentStep === 4 && (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">House Rules</h3>
+              <p className="text-gray-600">Set clear expectations for your guests</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <ApperIcon name="Clock" className="h-4 w-4 inline mr-2" />
+                  Check-in Time
+                </label>
+                <Input
+                  type="text"
+                  value={formData.houseRules.checkInTime}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    houseRules: { ...prev.houseRules, checkInTime: e.target.value }
+                  }))}
+                  placeholder="e.g., 3:00 PM"
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <ApperIcon name="Clock" className="h-4 w-4 inline mr-2" />
+                  Check-out Time
+                </label>
+                <Input
+                  type="text"
+                  value={formData.houseRules.checkOutTime}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    houseRules: { ...prev.houseRules, checkOutTime: e.target.value }
+                  }))}
+                  placeholder="e.g., 11:00 AM"
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <ApperIcon name="Moon" className="h-4 w-4 inline mr-2" />
+                  Quiet Hours
+                </label>
+                <Input
+                  type="text"
+                  value={formData.houseRules.quietHours}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    houseRules: { ...prev.houseRules, quietHours: e.target.value }
+                  }))}
+                  placeholder="e.g., 10:00 PM - 8:00 AM"
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold text-gray-900">Policies</h4>
+              
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <ApperIcon name="Cigarette" className="h-5 w-5 text-gray-600 mr-3" />
+                  <span className="text-gray-700">Smoking Allowed</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.houseRules.smokingAllowed}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      houseRules: { ...prev.houseRules, smokingAllowed: e.target.checked }
+                    }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <ApperIcon name="Heart" className="h-5 w-5 text-gray-600 mr-3" />
+                  <span className="text-gray-700">Pets Allowed</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.houseRules.petsAllowed}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      houseRules: { ...prev.houseRules, petsAllowed: e.target.checked }
+                    }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <ApperIcon name="Music" className="h-5 w-5 text-gray-600 mr-3" />
+                  <span className="text-gray-700">Parties/Events Allowed</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.houseRules.partiesAllowed}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      houseRules: { ...prev.houseRules, partiesAllowed: e.target.checked }
+                    }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <ApperIcon name="FileText" className="h-4 w-4 inline mr-2" />
+                Additional Rules & Guidelines
+              </label>
+              <TextArea
+                value={formData.houseRules.additionalRules}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  houseRules: { ...prev.houseRules, additionalRules: e.target.value }
+                }))}
+                placeholder="Any other important rules or guidelines for guests..."
+                rows={4}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                These rules will be displayed prominently on your property listing
+              </p>
+            </div>
+          </div>
         )}
 
         {/* Step 3: Pricing & Images */}
@@ -512,7 +681,7 @@ const getTotalSteps = () => 5;
               Cancel
             </Button>
             
-{currentStep < (showAvailabilityTab ? 4 : totalSteps) ? (
+{currentStep < (showAvailabilityTab ? 5 : totalSteps) ? (
               <Button
                 type="button"
                 onClick={nextStep}
@@ -522,7 +691,7 @@ const getTotalSteps = () => 5;
                 <span>Next</span>
                 <ApperIcon name="ChevronRight" className="h-4 w-4 ml-2" />
               </Button>
-            ) : currentStep === 4 && showAvailabilityTab ? (
+            ) : currentStep === 5 && showAvailabilityTab ? (
               <Button
                 type="button"
                 onClick={onCancel}

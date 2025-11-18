@@ -21,11 +21,12 @@ const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [bookingData, setBookingData] = useState({
+const [bookingData, setBookingData] = useState({
     checkIn: "",
     checkOut: "",
     guests: 1,
-    guestName: "John Doe"
+    guestName: "John Doe",
+    rulesAccepted: false
   });
   const [showAvailabilityCalendar, setShowAvailabilityCalendar] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -103,9 +104,9 @@ const { id } = useParams();
     }
   };
 
-  const handleBooking = async (e) => {
+const handleBooking = async (e) => {
     e.preventDefault();
-if (!bookingData.checkIn || !bookingData.checkOut) {
+    if (!bookingData.checkIn || !bookingData.checkOut) {
       toast.error("Please select check-in and check-out dates");
       return;
     }
@@ -115,6 +116,10 @@ if (!bookingData.checkIn || !bookingData.checkOut) {
       return;
     }
 
+    if (!bookingData.rulesAccepted) {
+      toast.error("Please accept the house rules to continue");
+      return;
+    }
     const checkIn = new Date(bookingData.checkIn);
     const checkOut = new Date(bookingData.checkOut);
     const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
@@ -143,8 +148,8 @@ if (!bookingData.checkIn || !bookingData.checkOut) {
     
     const totalPrice = nights * property.pricePerNight;
 
-    setBookingLoading(true);
-try {
+setBookingLoading(true);
+    try {
       const booking = await bookingService.create({
         propertyId: property.Id.toString(),
         guestName: bookingData.guestName,
@@ -152,7 +157,8 @@ try {
         checkOut: bookingData.checkOut,
         guests: parseInt(bookingData.guests),
         totalPrice: totalPrice,
-        specialRequests: bookingData.specialRequests || ""
+        specialRequests: bookingData.specialRequests || "",
+        rulesAccepted: bookingData.rulesAccepted
       });
 
       if (property.instantBook) {
@@ -160,6 +166,7 @@ try {
       } else {
         toast.success("Booking request submitted! The host will respond soon.");
       }
+      
       if (booking) {
         // Mark dates as booked in availability calendar
         await propertyService.markDatesAsBooked(
@@ -173,7 +180,8 @@ try {
           checkIn: "",
           checkOut: "",
           guests: 1,
-          guestName: "John Doe"
+          guestName: "John Doe",
+          rulesAccepted: false
         });
       }
     } catch (error) {
@@ -392,6 +400,103 @@ useEffect(() => {
             </div>
           </div>
 </div>
+
+        {/* House Rules Section */}
+        {property.houseRules && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+              <ApperIcon name="Shield" className="h-5 w-5 mr-2 text-primary-600" />
+              House Rules
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                <ApperIcon name="Clock" className="h-5 w-5 text-primary-600 mr-3" />
+                <div>
+                  <p className="font-medium text-gray-900">Check-in</p>
+                  <p className="text-gray-600">{property.houseRules.checkInTime}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                <ApperIcon name="Clock" className="h-5 w-5 text-primary-600 mr-3" />
+                <div>
+                  <p className="font-medium text-gray-900">Check-out</p>
+                  <p className="text-gray-600">{property.houseRules.checkOutTime}</p>
+                </div>
+              </div>
+              
+              {property.houseRules.quietHours && (
+                <div className="flex items-center p-4 bg-gray-50 rounded-lg md:col-span-2">
+                  <ApperIcon name="Moon" className="h-5 w-5 text-primary-600 mr-3" />
+                  <div>
+                    <p className="font-medium text-gray-900">Quiet Hours</p>
+                    <p className="text-gray-600">{property.houseRules.quietHours}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3 mb-6">
+              <h4 className="font-semibold text-gray-900">Property Policies</h4>
+              
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <ApperIcon name="Cigarette" className="h-4 w-4 text-gray-600 mr-3" />
+                  <span className="text-gray-700">Smoking</span>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  property.houseRules.smokingAllowed 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {property.houseRules.smokingAllowed ? 'Allowed' : 'Not Allowed'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <ApperIcon name="Heart" className="h-4 w-4 text-gray-600 mr-3" />
+                  <span className="text-gray-700">Pets</span>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  property.houseRules.petsAllowed 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {property.houseRules.petsAllowed ? 'Allowed' : 'Not Allowed'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center">
+                  <ApperIcon name="Music" className="h-4 w-4 text-gray-600 mr-3" />
+                  <span className="text-gray-700">Parties/Events</span>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  property.houseRules.partiesAllowed 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {property.houseRules.partiesAllowed ? 'Allowed' : 'Not Allowed'}
+                </span>
+              </div>
+            </div>
+
+            {property.houseRules.additionalRules && (
+              <div className="border-t border-gray-200 pt-4">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <ApperIcon name="FileText" className="h-4 w-4 mr-2" />
+                  Additional Rules & Guidelines
+                </h4>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-gray-700 whitespace-pre-line">{property.houseRules.additionalRules}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
           
           {/* Booking Card */}
         <div className="lg:col-span-1">
@@ -496,11 +601,35 @@ useEffect(() => {
                     </div>
                   )}
 
+{/* House Rules Acceptance */}
+                  {property.houseRules && (
+                    <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-start">
+                        <input
+                          type="checkbox"
+                          id="rulesAcceptance"
+                          checked={bookingData.rulesAccepted}
+                          onChange={(e) => setBookingData(prev => ({ 
+                            ...prev, 
+                            rulesAccepted: e.target.checked 
+                          }))}
+                          className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="rulesAcceptance" className="ml-3 block text-sm text-gray-700">
+                          <span className="font-medium">I agree to follow the house rules</span>
+                          <p className="text-xs text-gray-500 mt-1">
+                            By checking this box, you acknowledge that you have read and agree to comply with all house rules during your stay.
+                          </p>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
                   <Button
                     type="submit"
                     variant="primary"
                     className="w-full"
-                    disabled={bookingLoading || calculateNights() <= 0}
+                    disabled={bookingLoading || calculateNights() <= 0 || (property.houseRules && !bookingData.rulesAccepted)}
                   >
                     {bookingLoading ? (
                       <>
@@ -509,7 +638,7 @@ useEffect(() => {
                       </>
                     ) : (
                       <>
-<ApperIcon name={property.instantBook ? "Zap" : "Calendar"} className="h-4 w-4 mr-2" />
+                        <ApperIcon name={property.instantBook ? "Zap" : "Calendar"} className="h-4 w-4 mr-2" />
                         {property.instantBook ? "Book Instantly" : "Reserve Now"}
                       </>
                     )}

@@ -6,8 +6,17 @@ let propertyAvailability = {};
 class PropertyService {
 constructor() {
     this.properties = [...propertiesData.map(property => ({
-      ...property,
-      instantBook: property.instantBook || false
+...property,
+      instantBook: property.instantBook || false,
+      houseRules: property.houseRules || {
+        checkInTime: "3:00 PM",
+        checkOutTime: "11:00 AM",
+        smokingAllowed: false,
+        petsAllowed: false,
+        partiesAllowed: false,
+        quietHours: "10:00 PM - 8:00 AM",
+        additionalRules: ""
+      }
     }))];
   }
 
@@ -33,10 +42,19 @@ async getById(id) {
         const property = this.properties.find(p => p.Id === parseInt(id));
         if (property) {
           const ratingData = reviewService.getAverageRating(property.Id);
-          resolve({ 
+resolve({ 
             ...property,
             averageRating: ratingData.overall,
-            reviewCount: ratingData.reviewCount
+            reviewCount: ratingData.reviewCount,
+            houseRules: property.houseRules || {
+              checkInTime: "3:00 PM",
+              checkOutTime: "11:00 AM",
+              smokingAllowed: false,
+              petsAllowed: false,
+              partiesAllowed: false,
+              quietHours: "10:00 PM - 8:00 AM",
+              additionalRules: ""
+            }
           });
         } else {
           reject(new Error("Property not found"));
@@ -60,13 +78,22 @@ async getById(id) {
         }) || [];
         
 const newProperty = {
-          ...property,
+...property,
           Id: maxId + 1,
           images: processedImages,
           createdAt: new Date().toISOString(),
           averageRating: 0,
           reviewCount: 0,
-          instantBook: property.instantBook || false
+          instantBook: property.instantBook || false,
+          houseRules: property.houseRules || {
+            checkInTime: "3:00 PM",
+            checkOutTime: "11:00 AM",
+            smokingAllowed: false,
+            petsAllowed: false,
+            partiesAllowed: false,
+            quietHours: "10:00 PM - 8:00 AM",
+            additionalRules: ""
+          }
         };
         
         // Initialize availability for new property
@@ -96,7 +123,16 @@ const newProperty = {
             images: processedImages,
             averageRating: ratingData.overall,
             reviewCount: ratingData.reviewCount,
-            instantBook: propertyData.instantBook !== undefined ? propertyData.instantBook : this.properties[index].instantBook
+            instantBook: propertyData.instantBook !== undefined ? propertyData.instantBook : this.properties[index].instantBook,
+            houseRules: propertyData.houseRules || this.properties[index].houseRules || {
+              checkInTime: "3:00 PM",
+              checkOutTime: "11:00 AM",
+              smokingAllowed: false,
+              petsAllowed: false,
+              partiesAllowed: false,
+              quietHours: "10:00 PM - 8:00 AM",
+              additionalRules: ""
+            }
           };
           this.properties[index] = updatedProperty;
           resolve({ ...updatedProperty });
