@@ -156,6 +156,19 @@ return format(new Date(dateString), "MMM dd, yyyy");
               </div>
             </div>
           )}
+
+          {/* Instant Book Indicator */}
+          {property?.instantBook && booking.status.toLowerCase() === "confirmed" && (
+            <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+              <div className="text-sm font-medium text-green-800 mb-1 flex items-center">
+                <ApperIcon name="Zap" className="h-4 w-4 mr-1" />
+                Instant Book Confirmation
+              </div>
+              <div className="text-sm text-green-700 font-body">
+                This booking was confirmed instantly - no host approval required.
+              </div>
+            </div>
+          )}
           {/* Action Buttons */}
           <div className="pt-4 border-t border-gray-100">
             <div className="flex flex-wrap gap-3">

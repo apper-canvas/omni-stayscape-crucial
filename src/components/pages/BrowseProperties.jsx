@@ -298,6 +298,30 @@ useEffect(() => {
   </div>
 )}
 
+{/* Instant Book Properties Section */}
+{!searchQuery && filteredProperties.length > 0 && Object.values(filters).every(f => !f) && (
+  (() => {
+    const instantBookProperties = filteredProperties.filter(p => p.instantBook);
+    return instantBookProperties.length > 0 && (
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-8 mb-8">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold font-display text-gray-900 mb-2 flex items-center justify-center gap-3">
+            <ApperIcon name="Zap" className="h-6 w-6 text-green-600" />
+            Instant Book Properties
+          </h2>
+          <p className="text-gray-600 font-body">
+            Book immediately without waiting for host approval
+          </p>
+        </div>
+        <PropertyGrid 
+          properties={instantBookProperties.slice(0, 4)}
+          className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+        />
+      </div>
+    );
+  })()
+)}
+
 {/* All Properties */}
 <div>
   {!searchQuery && Object.values(filters).every(f => !f) && (

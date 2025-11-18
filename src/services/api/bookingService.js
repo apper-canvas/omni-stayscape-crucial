@@ -1,5 +1,4 @@
 import bookingsData from "@/services/mockData/bookings.json";
-import { toast } from "react-toastify";
 
 class BookingService {
   constructor() {
@@ -27,14 +26,14 @@ class BookingService {
     });
   }
 
-  async create(booking) {
+async create(booking) {
     return new Promise((resolve) => {
       setTimeout(() => {
         const maxId = Math.max(...this.bookings.map(b => b.Id), 0);
         const newBooking = {
           ...booking,
           Id: maxId + 1,
-          status: "Pending",
+          status: booking.instantBook ? "Confirmed" : "Pending",
           createdAt: new Date().toISOString()
         };
         this.bookings.push(newBooking);

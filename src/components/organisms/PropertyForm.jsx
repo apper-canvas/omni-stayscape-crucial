@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { cn } from "@/utils/cn";
 import { propertyService } from "@/services/api/propertyService";
+import { cn } from "@/utils/cn";
 import ApperIcon from "@/components/ApperIcon";
 import AvailabilityCalendar from "@/components/molecules/AvailabilityCalendar";
 import FileDropzone from "@/components/atoms/FileDropzone";
@@ -22,7 +22,8 @@ const [formData, setFormData] = useState({
     bathrooms: "",
     propertyType: "",
     amenities: [],
-images: []
+    images: [],
+    instantBook: false
    });
    const [showAvailabilityTab, setShowAvailabilityTab] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,7 +50,7 @@ const propertyTypes = [
 
 useEffect(() => {
     if (property) {
-      setFormData({
+setFormData({
         title: property.title || "",
         location: property.location || "",
         description: property.description || "",
@@ -58,8 +59,9 @@ useEffect(() => {
         bedrooms: property.bedrooms?.toString() || "",
         bathrooms: property.bathrooms?.toString() || "",
         propertyType: property.propertyType || "",
-amenities: property.amenities || [],
-        images: []
+        amenities: property.amenities || [],
+        images: [],
+        instantBook: property.instantBook || false
       });
       setShowAvailabilityTab(true); // Show availability tab for existing properties
       // If editing, skip to final step
@@ -158,13 +160,14 @@ const handleSubmit = async (e) => {
 
     setLoading(true);
     try {
-      const propertyData = {
+const propertyData = {
         ...formData,
         pricePerNight: parseInt(formData.pricePerNight),
         maxGuests: parseInt(formData.maxGuests),
         bedrooms: parseInt(formData.bedrooms),
         bathrooms: parseInt(formData.bathrooms),
         images: formData.images,
+        instantBook: formData.instantBook,
         hostId: "host-1" // Default host ID
       };
 
@@ -221,12 +224,10 @@ const handleSubmit = async (e) => {
   };
 
   const getStepTitle = (step) => {
-    const titles = ["Basic Info", "Details", "Amenities", "Photos & Pricing", "Availability"];
+const titles = ["Basic Info", "Details", "Amenities", "Photos & Pricing", "Booking Settings"];
     return titles[step] || "Unknown Step";
   };
-
-  const getTotalSteps = () => showAvailabilityTab ? 5 : 4;
-
+const getTotalSteps = () => 5;
   return (
     <div className={cn("max-w-4xl mx-auto", className)}>
       {/* Step Navigation */}
@@ -242,17 +243,17 @@ const handleSubmit = async (e) => {
           </h3>
         </div>
         
-        {/* Progress Bar */}
+{/* Progress Bar */}
         <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
           <div
             className="bg-primary-500 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            style={{ width: `${(currentStep / (showAvailabilityTab ? 4 : totalSteps)) * 100}%` }}
           ></div>
         </div>
         
-        {/* Step Indicators */}
+{/* Step Indicators */}
         <div className="flex justify-between">
-          {Array.from({ length: totalSteps }, (_, index) => (
+          {Array.from({ length: showAvailabilityTab ? 4 : totalSteps }, (_, index) => (
             <div key={index + 1} className="flex items-center">
               <div className={`
                 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
@@ -265,7 +266,7 @@ const handleSubmit = async (e) => {
               `}>
                 {currentStep > index + 1 ? '✓' : index + 1}
               </div>
-              {index < totalSteps - 1 && (
+              {index < (showAvailabilityTab ? 4 : totalSteps) - 1 && (
                 <div className={`w-12 h-1 ml-2 ${
                   currentStep > index + 1 ? 'bg-primary-500' : 'bg-gray-200'
                 }`}></div>
@@ -443,9 +444,14 @@ const handleSubmit = async (e) => {
               {errors.images && (
                 <p className="mt-2 text-sm text-red-600 font-body">{errors.images}</p>
               )}
-            </div>
+</div>
           </div>
-)}
+        )}
+<input
+                          type="checkbox"
+                          checked={formData.instantBook}
+                          onChange={(e) => setFormData(prev => ({ ...prev, instantBook: e.target.checked }))}
+                          className="sr-only peer"
 
         {/* Step 4: Availability Management */}
         {currentStep === 4 && showAvailabilityTab && (
@@ -491,7 +497,7 @@ const handleSubmit = async (e) => {
               Cancel
             </Button>
             
-            {currentStep < totalSteps ? (
+{currentStep < (showAvailabilityTab ? 4 : totalSteps) ? (
               <Button
                 type="button"
                 onClick={nextStep}

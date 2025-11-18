@@ -1,12 +1,14 @@
 import propertiesData from "@/services/mockData/properties.json";
 import { reviewService } from "@/services/api/reviewService";
-import React from "react";
 // Mock availability storage - in production, this would be stored in database
 let propertyAvailability = {};
 
 class PropertyService {
-  constructor() {
-    this.properties = [...propertiesData];
+constructor() {
+    this.properties = [...propertiesData.map(property => ({
+      ...property,
+      instantBook: property.instantBook || false
+    }))];
   }
 
 async getAll() {
@@ -48,22 +50,23 @@ async getById(id) {
       setTimeout(() => {
         const maxId = Math.max(...this.properties.map(p => p.Id), 0);
         
-        // Convert File objects to URLs for mock storage
+// Convert File objects to URLs for mock storage
         const processedImages = property.images?.map(image => {
-          if (typeof window !== 'undefined' && typeof File !== 'undefined' && image instanceof File) {
+          if (typeof window !== 'undefined' && window.File && image instanceof window.File) {
             // In a real app, this would upload to a server and return a URL
             return `https://example.com/uploads/${image.name}`;
           }
           return image;
         }) || [];
         
-        const newProperty = {
+const newProperty = {
           ...property,
           Id: maxId + 1,
           images: processedImages,
           createdAt: new Date().toISOString(),
           averageRating: 0,
-          reviewCount: 0
+          reviewCount: 0,
+          instantBook: property.instantBook || false
         };
         
         // Initialize availability for new property
@@ -79,21 +82,21 @@ async getById(id) {
       setTimeout(() => {
         const index = this.properties.findIndex(p => p.Id === parseInt(id));
         if (index !== -1) {
-          // Convert File objects to URLs for mock storage
+// Convert File objects to URLs for mock storage
           const processedImages = propertyData.images?.map(image => {
-            if (typeof window !== 'undefined' && typeof File !== 'undefined' && image instanceof File) {
+            if (typeof window !== 'undefined' && window.File && image instanceof window.File) {
               return `https://example.com/uploads/${image.name}`;
             }
             return image;
           }) || [];
-          
           const ratingData = reviewService.getAverageRating(this.properties[index].Id);
           const updatedProperty = { 
-            ...this.properties[index], 
+...this.properties[index], 
             ...propertyData,
             images: processedImages,
             averageRating: ratingData.overall,
-            reviewCount: ratingData.reviewCount
+            reviewCount: ratingData.reviewCount,
+            instantBook: propertyData.instantBook !== undefined ? propertyData.instantBook : this.properties[index].instantBook
           };
           this.properties[index] = updatedProperty;
           resolve({ ...updatedProperty });

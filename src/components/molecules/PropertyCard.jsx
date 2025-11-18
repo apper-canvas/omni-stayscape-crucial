@@ -34,11 +34,17 @@ const PropertyCard = ({ property, className, onEdit, onDelete, showActions = fal
           alt={property.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <div className="absolute top-3 left-3">
+<div className="absolute top-3 left-3 flex flex-col gap-2">
           <Badge variant="secondary" size="sm" className="backdrop-blur-sm">
             <ApperIcon name="MapPin" className="h-3 w-3 mr-1" />
             {property.location.split(",")[0]}
           </Badge>
+          {property.instantBook && (
+            <Badge variant="success" size="sm" className="backdrop-blur-sm bg-green-600 text-white border-green-600 font-medium">
+              <ApperIcon name="Zap" className="h-3 w-3 mr-1" />
+              Instant Book
+            </Badge>
+          )}
         </div>
         {showActions && (
           <div className="absolute top-3 right-3 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">

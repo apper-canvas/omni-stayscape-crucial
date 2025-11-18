@@ -144,7 +144,7 @@ if (!bookingData.checkIn || !bookingData.checkOut) {
     const totalPrice = nights * property.pricePerNight;
 
     setBookingLoading(true);
-    try {
+try {
       const booking = await bookingService.create({
         propertyId: property.Id.toString(),
         guestName: bookingData.guestName,
@@ -155,6 +155,11 @@ if (!bookingData.checkIn || !bookingData.checkOut) {
         specialRequests: bookingData.specialRequests || ""
       });
 
+      if (property.instantBook) {
+        toast.success("Booking confirmed instantly! You're all set for your stay.");
+      } else {
+        toast.success("Booking request submitted! The host will respond soon.");
+      }
       if (booking) {
         // Mark dates as booked in availability calendar
         await propertyService.markDatesAsBooked(
@@ -250,11 +255,19 @@ useEffect(() => {
 
       {/* Property Header */}
       <div className="space-y-4">
-        <div className="flex items-start justify-between">
+<div className="flex items-start justify-between">
 <div>
-            <h1 className="text-3xl lg:text-4xl font-bold font-display text-gray-900">
-              {property.title}
-            </h1>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl lg:text-4xl font-bold font-display text-gray-900">
+                {property.title}
+              </h1>
+              {property.instantBook && (
+                <Badge variant="success" className="bg-green-600 text-white border-green-600 font-medium">
+                  <ApperIcon name="Zap" className="h-4 w-4 mr-1" />
+                  Instant Book
+                </Badge>
+              )}
+            </div>
             
             {/* Rating Summary */}
             {(() => {
@@ -496,8 +509,8 @@ useEffect(() => {
                       </>
                     ) : (
                       <>
-                        <ApperIcon name="Calendar" className="h-4 w-4 mr-2" />
-                        Reserve Now
+<ApperIcon name={property.instantBook ? "Zap" : "Calendar"} className="h-4 w-4 mr-2" />
+                        {property.instantBook ? "Book Instantly" : "Reserve Now"}
                       </>
                     )}
                   </Button>
