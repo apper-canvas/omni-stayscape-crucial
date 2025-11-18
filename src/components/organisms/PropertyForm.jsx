@@ -202,7 +202,7 @@ const nextStep = () => {
       case 2:
         return formData.propertyType && formData.bedrooms && formData.bathrooms && formData.maxGuests;
       case 3:
-        return formData.pricePerNight && formData.images.filter(img => img.trim()).length > 0;
+return formData.pricePerNight && formData.pricePerNight > 0 && formData.images.filter(img => img.trim()).length > 0;
       default:
         return false;
     }
